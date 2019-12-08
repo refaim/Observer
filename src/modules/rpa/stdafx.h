@@ -13,6 +13,7 @@
 
 
 // Additional headers
-#include <stdint.h>
 #include <climits>
+#include <cstdint>
 #include <string>
+#include <vector>

@@ -23,9 +23,17 @@ enum PyIndexEntryValueTypeIndex
     PREFIX = 2,
 };
 
+struct RenPyIndexEntry
+{
+    std::string *path;
+    int64_t offset;
+    int64_t length;
+};
+
 struct RenPyArchive
 {
     CFileStream* inputStream;
+    std::vector<RenPyIndexEntry*>* index;
 };
 
 int MODULE_EXPORT OpenStorage(StorageOpenParams params, HANDLE* storage, StorageGeneralInfo* info)
@@ -44,6 +52,7 @@ int MODULE_EXPORT OpenStorage(StorageOpenParams params, HANDLE* storage, Storage
 
     auto archive = new RenPyArchive();
     archive->inputStream = stream;
+    archive->index = new std::vector<RenPyIndexEntry*>();
     *storage = archive;
 
     memset(info, 0, sizeof(StorageGeneralInfo));
@@ -59,8 +68,20 @@ void MODULE_EXPORT CloseStorage(HANDLE storage)
     auto archive = (RenPyArchive*)storage;
     if (archive == nullptr) return;
 
-    if (archive->inputStream != nullptr)
-        delete archive->inputStream;
+    if (archive->inputStream != nullptr) archive->inputStream->Close();
+    delete archive->inputStream;
+
+    if (archive->index != nullptr)
+    {
+        for (auto i = archive->index->begin(); i != archive->index->end(); ++i)
+        {
+            RenPyIndexEntry* entry = *i;
+            delete entry->path;
+            delete entry;
+        }
+        archive->index->clear();
+    }
+    delete archive->index;
 
     delete archive;
 }
@@ -74,6 +95,7 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     bool success = true;
     Bytef* compressedData = nullptr;
     Bytef* uncompressedData = nullptr;
+    RenPyIndexEntry* indexEntry = nullptr;
     std::vector<PyObject*> pyObjectsToRecycle;
 
     char buffer[sizeof(int64_t)];
@@ -87,16 +109,15 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
 
     ENSURE_SUCCESS(stream->Seek(indexOffset, STREAM_BEGIN));
     int64_t archiveSize = stream->GetSize();
-    if (archiveSize == 0) return FALSE;
+    ENSURE_SUCCESS(archiveSize > 0);
     int64_t archivePosition = stream->GetPos();
-    if (archivePosition == 0) return FALSE;
-    // TODO handle conversion of int64_t to uLongf
-    uLongf compressedSize = archiveSize - archivePosition;
+    ENSURE_SUCCESS(archivePosition > 0);
+    uLongf compressedSize = archiveSize - archivePosition; // TODO handle conversion of int64_t to uLongf
     compressedData = new Bytef[compressedSize]();
     ENSURE_SUCCESS(stream->ReadBuffer(compressedData, compressedSize));
 
     uLongf uncompressedSize = 0;
-    uLongf compressionMultiplier = 2;
+    uLongf compressionMultiplier = 4;
     int zStatus = Z_BUF_ERROR;
     do
     {
@@ -109,6 +130,7 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     while (zStatus == Z_BUF_ERROR);
     ENSURE_SUCCESS(zStatus == Z_OK);
     delete compressedData;
+    compressedData = nullptr;
 
     Py_Initialize();
     PyObject* pyPickleArgs = PyTuple_New(1);
@@ -117,6 +139,7 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     PyObject* pyUncompressedData = PyByteArray_FromStringAndSize((const char*)uncompressedData, uncompressedSize);
     ENSURE_SUCCESS(pyUncompressedData != nullptr);
     delete uncompressedData;
+    uncompressedData = nullptr;
     ENSURE_SUCCESS(PyTuple_SetItem(pyPickleArgs, 0, pyUncompressedData) == 0);
     PyObject* pyPickleModuleName = PyUnicode_FromString("pickle");
     pyObjectsToRecycle.push_back(pyPickleModuleName);
@@ -125,72 +148,85 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     PyObject* pyPickleLoader = PyObject_GetAttrString(pyPickleModule, "loads");
     ENSURE_SUCCESS(pyPickleLoader != nullptr);
     pyObjectsToRecycle.push_back(pyPickleLoader);
+    // TODO this fails on "The Flower Shop.rpa"
     PyObject* pyIndexDictionary = PyObject_CallObject(pyPickleLoader, pyPickleArgs);
     ENSURE_SUCCESS(pyIndexDictionary != nullptr);
     pyObjectsToRecycle.push_back(pyIndexDictionary);
+
+    archive->index->reserve(PyDict_Size(pyIndexDictionary));
 
     PyObject* pyPathInArchive;
     PyObject* pyIndexEntries;
     Py_ssize_t i = 0;
     while (PyDict_Next(pyIndexDictionary, &i, &pyPathInArchive, &pyIndexEntries))
     {
-        std::string pathInArchive = PyUnicode_AsUTF8(pyPathInArchive);
-        for (Py_ssize_t j = 0; j < PyList_Size(pyIndexEntries); ++j) // TODO handle multiple segments
+        ENSURE_SUCCESS(PyList_Size(pyIndexEntries) == 1); // TODO implement
+        PyObject* pyIndexEntry = PyList_GetItem(pyIndexEntries, 0);
+        ENSURE_SUCCESS(pyIndexEntry != nullptr);
+
+        PyObject* pyFileOffset = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::OFFSET);
+        ENSURE_SUCCESS(pyFileOffset);
+        PyObject* pyFileLength = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::LENGTH);
+        ENSURE_SUCCESS(pyFileLength);
+
+        Py_ssize_t prefixLength = 0;
+        const char* prefixBytes = nullptr;
+        if (PyTuple_Size(pyIndexEntry) == 3)
         {
-            PyObject* pyIndexEntry = PyList_GetItem(pyIndexEntries, j);
-            ENSURE_SUCCESS(pyIndexEntry != nullptr);
+            PyObject* pyPrefixString = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::PREFIX);
+            ENSURE_SUCCESS(pyPrefixString != nullptr);
+            ENSURE_SUCCESS(PyUnicode_GetLength(pyPrefixString) == 0); // TODO implement
 
-            PyObject* pyFileOffset = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::OFFSET);
-            ENSURE_SUCCESS(pyFileOffset);
-            PyObject* pyFileLength = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::LENGTH);
-            ENSURE_SUCCESS(pyFileLength);
-
-            const char* prefixBytes = nullptr;
-            if (PyTuple_Size(pyIndexEntry) == 3)
-            {
-                PyObject* pyPrefixString = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::PREFIX);
-                ENSURE_SUCCESS(pyPrefixString != nullptr);
-
-                // TODO
-            }
+            //// TODO The returned buffer always has an extra null byte appended (not included in size), regardless of whether there are any other null code points.
+            //prefixBytes = PyUnicode_AsUTF8AndSize(pyPrefixString, &prefixLength);
+            //ENSURE_SUCCESS(prefixBytes != nullptr);
+            //if (prefixLength == 0) prefixBytes = nullptr;
         }
-    //    Py_ssize_t prefixSize = 0;
-    //    char* prefixBytes = nullptr;
-    //    if (PyTuple_Size(pyIndexEntry) == 3)
-    //    {
-    //        PyObject* pyPrefixString = PyTuple_GetItem(pyIndexEntry, 2);
-    //    }
-    //    //def deobfuscate_entry(key: int, entry : IndexEntry)->ComplexIndexEntry:
-    //    //return[
-    //    //    (offset ^ key, length ^ key, start)
-    //    //        for offset, length, start in UnRPA.normalise_entry(entry)
-    //    //]
 
-    //        //return[
-    //        //    (*cast(SimpleIndexPart, part), b"")
-    //        //        if len(part) == 2
-    //        //        else cast(ComplexIndexPart, part)
-    //        //            for part in entry
-    //        //]
+        const char* referenceToPath = PyUnicode_AsUTF8(pyPathInArchive);
+        ENSURE_SUCCESS(referenceToPath != nullptr);
+        std::string* ownedPath = new std::string(referenceToPath);
+        std::replace(ownedPath->begin(), ownedPath->end(), '/', '\\');
 
-    //    // path: UnRPA.deobfuscate_entry(key, entry) for path, entry in index.items()
+        indexEntry = new RenPyIndexEntry();
+        indexEntry->path = ownedPath;
+        indexEntry->offset = PyLong_AsLongLong(pyFileOffset) ^ encryptionKey;
+        indexEntry->length = PyLong_AsLongLong(pyFileLength) ^ encryptionKey;
+        ENSURE_SUCCESS(indexEntry->offset != -1 && indexEntry->length != -1);
+        archive->index->push_back(indexEntry);
+        indexEntry = nullptr;
     }
-
-    Py_Finalize();
 
 cleanup:
     delete compressedData;
     delete uncompressedData;
+    delete indexEntry;
 
-    for (auto const& pyObject : pyObjectsToRecycle) Py_DECREF(pyObject);
+    for (auto i = pyObjectsToRecycle.begin(); i != pyObjectsToRecycle.end(); ++i) Py_XDECREF(*i);
     pyObjectsToRecycle.clear();
+    Py_Finalize();
 
     return success ? TRUE : FALSE;
 }
 
 int MODULE_EXPORT GetStorageItem(HANDLE storage, int item_index, StorageItemInfo* item_info)
 {
-    return GET_ITEM_NOMOREITEMS;
+    auto archive = (RenPyArchive*)storage;
+    if (archive == nullptr || item_index < 0)
+        return GET_ITEM_ERROR;
+    if (item_index >= archive->index->size())
+        return GET_ITEM_NOMOREITEMS;
+
+    RenPyIndexEntry *indexEntry = archive->index->at(item_index);
+
+    memset(item_info, 0, sizeof(StorageItemInfo));
+    item_info->Attributes = FILE_ATTRIBUTE_NORMAL;
+    item_info->Size = indexEntry->length;
+    item_info->PackedSize = indexEntry->length;
+    if (MultiByteToWideChar(CP_ACP, 0, indexEntry->path->c_str(), -1, item_info->Path, STRBUF_SIZE(item_info->Path)) == 0)
+        return GET_ITEM_ERROR;
+
+    return GET_ITEM_OK;
 }
 
 int MODULE_EXPORT ExtractItem(HANDLE storage, ExtractOperationParams params)

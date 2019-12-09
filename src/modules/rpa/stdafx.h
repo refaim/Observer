@@ -13,6 +13,7 @@
 
 
 // Additional headers
+#include <algorithm>
 #include <climits>
 #include <cstdint>
 #include <string>

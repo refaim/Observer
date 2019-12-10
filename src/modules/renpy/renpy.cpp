@@ -13,6 +13,7 @@
 #define WHITESPACE " "
 
 #define ENSURE_SUCCESS(SUCCESS_CONDITION) if (!(SUCCESS_CONDITION)) { success = false; goto cleanup; }
+#define ENSURE_SUCCESS_EX(SUCCESS_CONDITION, ERROR) if (!(SUCCESS_CONDITION)) { status = ERROR; goto cleanup; }
 
 enum PyIndexEntryValueTypeIndex
 {
@@ -219,30 +220,38 @@ int MODULE_EXPORT GetStorageItem(HANDLE storage, int item_index, StorageItemInfo
 
 int MODULE_EXPORT ExtractItem(HANDLE storage, ExtractOperationParams params)
 {
+    int status = SER_SUCCESS;
+    CFileStream* outputStream = nullptr;
+
     auto archive = (RenPyArchive*)storage;
-    if (archive == nullptr)
-        return SER_ERROR_SYSTEM;
+    if (archive == nullptr) return SER_ERROR_SYSTEM;
 
     if (params.ItemIndex < 0 || params.ItemIndex >= archive->index.size())
         return SER_ERROR_SYSTEM;
 
-    // TODO handle flags
-    // TODO report progress
-
     auto indexEntry = archive->index.at(params.ItemIndex);
-    // TODO use other SER_ errors
-    archive->inputStream->Seek(indexEntry->offset, STREAM_BEGIN); // TODO handle error
+    if (!archive->inputStream->Seek(indexEntry->offset, STREAM_BEGIN))
+        return SER_ERROR_READ;
 
-    char* buffer = new char[indexEntry->length]();
-    archive->inputStream->ReadBuffer(buffer, indexEntry->length);
-
-    auto outputStream = CFileStream::Open(params.DestPath, false, true);
+    outputStream = CFileStream::Open(params.DestPath, false, true);
     if (outputStream == nullptr) return SER_ERROR_WRITE;
-    outputStream->WriteBuffer(buffer, indexEntry->length);
-    outputStream->Close();
-    delete buffer;
 
-    return SER_SUCCESS;
+    char buffer[32 * 1024];
+    int64_t bytesToRead = indexEntry->length;
+    int64_t chunkLength = sizeof(buffer);
+    while (bytesToRead > 0)
+    {
+        if (chunkLength > bytesToRead) chunkLength = bytesToRead;
+        ENSURE_SUCCESS_EX(archive->inputStream->ReadBuffer(buffer, chunkLength), SER_ERROR_READ);
+        ENSURE_SUCCESS_EX(outputStream->WriteBuffer(buffer, chunkLength), SER_ERROR_WRITE);
+        bytesToRead -= chunkLength;
+        ENSURE_SUCCESS_EX(params.Callbacks.FileProgress(params.Callbacks.signalContext, indexEntry->length - bytesToRead), SER_USERABORT);
+    }
+
+cleanup:
+    if (outputStream != nullptr) outputStream->Close();
+
+    return status;
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -12,8 +12,6 @@
 #define FILE_SIGNATURE_RPA30 "RPA-3.0"
 #define WHITESPACE " "
 
-// TODO rename module to renpy
-
 #define ENSURE_SUCCESS(SUCCESS_CONDITION) if (!(SUCCESS_CONDITION)) { success = false; goto cleanup; }
 
 enum PyIndexEntryValueTypeIndex

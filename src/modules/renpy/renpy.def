@@ -1,4 +1,4 @@
-LIBRARY "rpa.so"
+LIBRARY "renpy.so"
 
 EXPORTS
     LoadSubModule

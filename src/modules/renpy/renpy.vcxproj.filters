@@ -21,12 +21,12 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rpa.cpp">
+    <ClCompile Include="renpy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="rpa.def">
+    <None Include="renpy.def">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

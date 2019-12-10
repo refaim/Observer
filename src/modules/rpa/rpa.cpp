@@ -25,7 +25,7 @@ enum PyIndexEntryValueTypeIndex
 
 struct RenPyIndexEntry
 {
-    std::string *path;
+    std::string path;
     int64_t offset;
     int64_t length;
 };
@@ -33,7 +33,7 @@ struct RenPyIndexEntry
 struct RenPyArchive
 {
     CFileStream* inputStream;
-    std::vector<RenPyIndexEntry*>* index;
+    std::vector<RenPyIndexEntry*> index;
 };
 
 int MODULE_EXPORT OpenStorage(StorageOpenParams params, HANDLE* storage, StorageGeneralInfo* info)
@@ -46,13 +46,12 @@ int MODULE_EXPORT OpenStorage(StorageOpenParams params, HANDLE* storage, Storage
 
     char signatureCandidate[sizeof(FILE_SIGNATURE_RPA30) - 1];
     if (!stream->ReadBuffer(signatureCandidate, sizeof(signatureCandidate)))
-        return SOR_INVALID_FILE;
+        return SOR_INVALID_FILE; // TODO close file
     if (!SignatureMatchOrNull(signatureCandidate, strlen(FILE_SIGNATURE_RPA30), FILE_SIGNATURE_RPA30))
-        return SOR_INVALID_FILE;
+        return SOR_INVALID_FILE; // TODO close file
 
     auto archive = new RenPyArchive();
     archive->inputStream = stream;
-    archive->index = new std::vector<RenPyIndexEntry*>();
     *storage = archive;
 
     memset(info, 0, sizeof(StorageGeneralInfo));
@@ -71,17 +70,8 @@ void MODULE_EXPORT CloseStorage(HANDLE storage)
     if (archive->inputStream != nullptr) archive->inputStream->Close();
     delete archive->inputStream;
 
-    if (archive->index != nullptr)
-    {
-        for (auto i = archive->index->begin(); i != archive->index->end(); ++i)
-        {
-            RenPyIndexEntry* entry = *i;
-            delete entry->path;
-            delete entry;
-        }
-        archive->index->clear();
-    }
-    delete archive->index;
+    for (auto i = archive->index.begin(); i != archive->index.end(); ++i) delete *i;
+    archive->index.clear();
 
     delete archive;
 }
@@ -153,7 +143,7 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     ENSURE_SUCCESS(pyIndexDictionary != nullptr);
     pyObjectsToRecycle.push_back(pyIndexDictionary);
 
-    archive->index->reserve(PyDict_Size(pyIndexDictionary));
+    archive->index.reserve(PyDict_Size(pyIndexDictionary));
 
     PyObject* pyPathInArchive;
     PyObject* pyIndexEntries;
@@ -183,17 +173,17 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
             //if (prefixLength == 0) prefixBytes = nullptr;
         }
 
-        const char* referenceToPath = PyUnicode_AsUTF8(pyPathInArchive);
-        ENSURE_SUCCESS(referenceToPath != nullptr);
-        std::string* ownedPath = new std::string(referenceToPath);
-        std::replace(ownedPath->begin(), ownedPath->end(), '/', '\\');
-
         indexEntry = new RenPyIndexEntry();
-        indexEntry->path = ownedPath;
         indexEntry->offset = PyLong_AsLongLong(pyFileOffset) ^ encryptionKey;
         indexEntry->length = PyLong_AsLongLong(pyFileLength) ^ encryptionKey;
         ENSURE_SUCCESS(indexEntry->offset != -1 && indexEntry->length != -1);
-        archive->index->push_back(indexEntry);
+
+        const char* referenceToPath = PyUnicode_AsUTF8(pyPathInArchive);
+        ENSURE_SUCCESS(referenceToPath != nullptr);
+        indexEntry->path.assign(referenceToPath);
+        std::replace(indexEntry->path.begin(), indexEntry->path.end(), '/', '\\');
+
+        archive->index.push_back(indexEntry);
         indexEntry = nullptr;
     }
 
@@ -202,7 +192,7 @@ cleanup:
     delete uncompressedData;
     delete indexEntry;
 
-    for (auto i = pyObjectsToRecycle.begin(); i != pyObjectsToRecycle.end(); ++i) Py_XDECREF(*i);
+    for (auto i = pyObjectsToRecycle.begin(); i != pyObjectsToRecycle.end(); ++i) Py_DECREF(*i);
     pyObjectsToRecycle.clear();
     Py_Finalize();
 
@@ -214,16 +204,16 @@ int MODULE_EXPORT GetStorageItem(HANDLE storage, int item_index, StorageItemInfo
     auto archive = (RenPyArchive*)storage;
     if (archive == nullptr || item_index < 0)
         return GET_ITEM_ERROR;
-    if (item_index >= archive->index->size())
+    if (item_index >= archive->index.size())
         return GET_ITEM_NOMOREITEMS;
 
-    RenPyIndexEntry *indexEntry = archive->index->at(item_index);
+    auto indexEntry = archive->index.at(item_index);
 
     memset(item_info, 0, sizeof(StorageItemInfo));
     item_info->Attributes = FILE_ATTRIBUTE_NORMAL;
     item_info->Size = indexEntry->length;
     item_info->PackedSize = indexEntry->length;
-    if (MultiByteToWideChar(CP_ACP, 0, indexEntry->path->c_str(), -1, item_info->Path, STRBUF_SIZE(item_info->Path)) == 0)
+    if (MultiByteToWideChar(CP_ACP, 0, indexEntry->path.c_str(), -1, item_info->Path, STRBUF_SIZE(item_info->Path)) == 0)
         return GET_ITEM_ERROR;
 
     return GET_ITEM_OK;

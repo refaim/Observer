@@ -243,15 +243,14 @@ int MODULE_EXPORT ExtractItem(HANDLE storage, ExtractOperationParams params)
     if (outputStream == nullptr) return SER_ERROR_WRITE;
 
     char buffer[32 * 1024];
-    int64_t bytesToRead = indexEntry->length;
-    int64_t chunkLength = sizeof(buffer);
-    while (bytesToRead > 0)
+    uint64_t bytesLeft = indexEntry->length;
+    while (bytesLeft > 0)
     {
-        if (chunkLength > bytesToRead) chunkLength = bytesToRead;
-        ENSURE_SUCCESS_EX(archive->inputStream->ReadBuffer(buffer, chunkLength), SER_ERROR_READ);
-        ENSURE_SUCCESS_EX(outputStream->WriteBuffer(buffer, chunkLength), SER_ERROR_WRITE);
-        bytesToRead -= chunkLength;
-        ENSURE_SUCCESS_EX(params.Callbacks.FileProgress(params.Callbacks.signalContext, indexEntry->length - bytesToRead), SER_USERABORT);
+        uint64_t chunkSize = min(bytesLeft, sizeof(buffer));
+        ENSURE_SUCCESS_EX(archive->inputStream->ReadBuffer(buffer, chunkSize), SER_ERROR_READ);
+        bytesLeft -= chunkSize;
+        ENSURE_SUCCESS_EX(outputStream->WriteBuffer(buffer, chunkSize), SER_ERROR_WRITE);
+        ENSURE_SUCCESS_EX(params.Callbacks.FileProgress(params.Callbacks.signalContext, chunkSize), SER_USERABORT);
     }
 
 cleanup:

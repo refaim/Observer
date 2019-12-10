@@ -221,7 +221,30 @@ int MODULE_EXPORT GetStorageItem(HANDLE storage, int item_index, StorageItemInfo
 
 int MODULE_EXPORT ExtractItem(HANDLE storage, ExtractOperationParams params)
 {
-    return SER_ERROR_SYSTEM;
+    auto archive = (RenPyArchive*)storage;
+    if (archive == nullptr)
+        return SER_ERROR_SYSTEM;
+
+    if (params.ItemIndex < 0 || params.ItemIndex >= archive->index.size())
+        return SER_ERROR_SYSTEM;
+
+    // TODO handle flags
+    // TODO report progress
+
+    auto indexEntry = archive->index.at(params.ItemIndex);
+    // TODO use other SER_ errors
+    archive->inputStream->Seek(indexEntry->offset, STREAM_BEGIN); // TODO handle error
+
+    char* buffer = new char[indexEntry->length]();
+    archive->inputStream->ReadBuffer(buffer, indexEntry->length);
+
+    auto outputStream = CFileStream::Open(params.DestPath, false, true);
+    if (outputStream == nullptr) return SER_ERROR_WRITE;
+    outputStream->WriteBuffer(buffer, indexEntry->length);
+    outputStream->Close();
+    delete buffer;
+
+    return SER_SUCCESS;
 }
 
 //////////////////////////////////////////////////////////////////////////

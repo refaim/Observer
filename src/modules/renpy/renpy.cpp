@@ -37,6 +37,8 @@ struct RenPyArchive
 
 int MODULE_EXPORT OpenStorage(StorageOpenParams params, HANDLE* storage, StorageGeneralInfo* info)
 {
+    int status = SOR_SUCCESS;
+
     if (!SignatureMatchOrNull(params.Data, params.DataSize, FILE_SIGNATURE_RPA30))
         return SOR_INVALID_FILE;
 
@@ -44,21 +46,25 @@ int MODULE_EXPORT OpenStorage(StorageOpenParams params, HANDLE* storage, Storage
     if (stream == nullptr) return SOR_INVALID_FILE;
 
     char signatureCandidate[sizeof(FILE_SIGNATURE_RPA30) - 1];
-    if (!stream->ReadBuffer(signatureCandidate, sizeof(signatureCandidate)))
-        return SOR_INVALID_FILE; // TODO close file
-    if (!SignatureMatchOrNull(signatureCandidate, strlen(FILE_SIGNATURE_RPA30), FILE_SIGNATURE_RPA30))
-        return SOR_INVALID_FILE; // TODO close file
+    ENSURE_SUCCESS_EX(stream->ReadBuffer(signatureCandidate, sizeof(signatureCandidate)), SOR_INVALID_FILE);
+    ENSURE_SUCCESS_EX(SignatureMatchOrNull(signatureCandidate, strlen(FILE_SIGNATURE_RPA30), FILE_SIGNATURE_RPA30), SOR_INVALID_FILE);
 
     auto archive = new RenPyArchive();
     archive->inputStream = stream;
     *storage = archive;
 
     memset(info, 0, sizeof(StorageGeneralInfo));
-    wcscpy_s(info->Format, STORAGE_FORMAT_NAME_MAX_LEN, L"RenPy Archive");
-    wcscpy_s(info->Compression, STORAGE_PARAM_MAX_LEN, L"zlib");
-    wcscpy_s(info->Comment, STORAGE_PARAM_MAX_LEN, L"-");
+    ENSURE_SUCCESS_EX(wcscpy_s(info->Format, STORAGE_FORMAT_NAME_MAX_LEN, L"RenPy Archive") == 0, SOR_INVALID_FILE);
+    ENSURE_SUCCESS_EX(wcscpy_s(info->Compression, STORAGE_PARAM_MAX_LEN, L"zlib") == 0, SOR_INVALID_FILE);
+    ENSURE_SUCCESS_EX(wcscpy_s(info->Comment, STORAGE_PARAM_MAX_LEN, L"-") == 0, SOR_INVALID_FILE);
 
-    return SOR_SUCCESS;
+cleanup:
+    if (status != SOR_SUCCESS)
+    {
+        if (stream != nullptr) stream->Close();
+        delete stream;
+    }
+    return status;
 }
 
 void MODULE_EXPORT CloseStorage(HANDLE storage)
@@ -250,6 +256,7 @@ int MODULE_EXPORT ExtractItem(HANDLE storage, ExtractOperationParams params)
 
 cleanup:
     if (outputStream != nullptr) outputStream->Close();
+    delete outputStream;
 
     return status;
 }

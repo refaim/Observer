@@ -55,7 +55,7 @@ int MODULE_EXPORT OpenStorage(StorageOpenParams params, HANDLE* storage, Storage
 
     memset(info, 0, sizeof(StorageGeneralInfo));
     ENSURE_SUCCESS_EX(wcscpy_s(info->Format, STORAGE_FORMAT_NAME_MAX_LEN, L"RenPy Archive") == 0, SOR_INVALID_FILE);
-    ENSURE_SUCCESS_EX(wcscpy_s(info->Compression, STORAGE_PARAM_MAX_LEN, L"zlib") == 0, SOR_INVALID_FILE);
+    ENSURE_SUCCESS_EX(wcscpy_s(info->Compression, STORAGE_PARAM_MAX_LEN, L"-") == 0, SOR_INVALID_FILE);
     ENSURE_SUCCESS_EX(wcscpy_s(info->Comment, STORAGE_PARAM_MAX_LEN, L"-") == 0, SOR_INVALID_FILE);
 
 cleanup:

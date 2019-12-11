@@ -218,7 +218,7 @@ int MODULE_EXPORT GetStorageItem(HANDLE storage, int item_index, StorageItemInfo
     item_info->Attributes = FILE_ATTRIBUTE_NORMAL;
     item_info->Size = indexEntry->length;
     item_info->PackedSize = indexEntry->length;
-    if (MultiByteToWideChar(CP_ACP, 0, indexEntry->path.c_str(), -1, item_info->Path, STRBUF_SIZE(item_info->Path)) == 0)
+    if (MultiByteToWideChar(CP_UTF8, 0, indexEntry->path.c_str(), -1, item_info->Path, STRBUF_SIZE(item_info->Path)) == 0)
         return GET_ITEM_ERROR;
 
     return GET_ITEM_OK;

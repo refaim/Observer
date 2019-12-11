@@ -15,6 +15,8 @@
 #define ENSURE_SUCCESS(SUCCESS_CONDITION) if (!(SUCCESS_CONDITION)) { success = false; goto cleanup; }
 #define ENSURE_SUCCESS_EX(SUCCESS_CONDITION, ERROR) if (!(SUCCESS_CONDITION)) { status = ERROR; goto cleanup; }
 
+#define DECLARE_PYOBJECT(VAR, EXPR) PyObject* VAR = EXPR; ENSURE_SUCCESS(VAR != nullptr); pyObjectsToRecycle.push_back(VAR);
+
 enum PyIndexEntryValueTypeIndex
 {
     OFFSET = 0,
@@ -27,6 +29,8 @@ struct RenPyIndexEntry
     std::string path;
     int64_t offset;
     int64_t length;
+    char* prefixBytes;
+    size_t prefixLength;
 };
 
 struct RenPyArchive
@@ -75,7 +79,12 @@ void MODULE_EXPORT CloseStorage(HANDLE storage)
     if (archive->inputStream != nullptr) archive->inputStream->Close();
     delete archive->inputStream;
 
-    for (auto i = archive->index.begin(); i != archive->index.end(); ++i) delete *i;
+    for (auto i = archive->index.begin(); i != archive->index.end(); ++i)
+    {
+        auto entry = *i;
+        delete entry->prefixBytes;
+        delete entry;
+    }
     archive->index.clear();
 
     delete archive;
@@ -111,6 +120,7 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     compressedData = new Bytef[compressedSize]();
     ENSURE_SUCCESS(stream->ReadBuffer(compressedData, compressedSize));
 
+    // TODO unpack in chunks, append to bytearray
     uLongf uncompressedSize = 0;
     uLongf compressionMultiplier = 4;
     int zStatus = Z_BUF_ERROR;
@@ -128,26 +138,23 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     compressedData = nullptr;
 
     Py_Initialize();
-    PyObject* pyPickleArgs = PyTuple_New(1);
-    ENSURE_SUCCESS(pyPickleArgs != nullptr);
-    pyObjectsToRecycle.push_back(pyPickleArgs);
-    PyObject* pyUncompressedData = PyByteArray_FromStringAndSize((const char*)uncompressedData, uncompressedSize);
-    ENSURE_SUCCESS(pyUncompressedData != nullptr);
+
+    DECLARE_PYOBJECT(pyUncompressedData, PyByteArray_FromStringAndSize((const char*)uncompressedData, uncompressedSize));
     delete[] uncompressedData;
     uncompressedData = nullptr;
-    ENSURE_SUCCESS(PyTuple_SetItem(pyPickleArgs, 0, pyUncompressedData) == 0);
-    PyObject* pyPickleModuleName = PyUnicode_FromString("pickle");
-    pyObjectsToRecycle.push_back(pyPickleModuleName);
-    PyObject* pyPickleModule = PyImport_Import(pyPickleModuleName);
-    pyObjectsToRecycle.push_back(pyPickleModule);
-    PyObject* pyPickleLoader = PyObject_GetAttrString(pyPickleModule, "loads");
-    ENSURE_SUCCESS(pyPickleLoader != nullptr);
-    pyObjectsToRecycle.push_back(pyPickleLoader);
-    // TODO this fails on "The Flower Shop.rpa"
-    PyObject* pyIndexDictionary = PyObject_CallObject(pyPickleLoader, pyPickleArgs);
-    ENSURE_SUCCESS(pyIndexDictionary != nullptr);
-    pyObjectsToRecycle.push_back(pyIndexDictionary);
 
+    DECLARE_PYOBJECT(pyPickleModuleName, PyUnicode_FromString("pickle"));
+    DECLARE_PYOBJECT(pyPickleModule, PyImport_Import(pyPickleModuleName));
+    DECLARE_PYOBJECT(pyPickleLoader, PyObject_GetAttrString(pyPickleModule, "loads"));
+
+    DECLARE_PYOBJECT(pyPickleLoaderArgs, PyTuple_New(1));
+    ENSURE_SUCCESS(PyTuple_SetItem(pyPickleLoaderArgs, 0, pyUncompressedData) == 0);
+
+    DECLARE_PYOBJECT(pyPickleLoaderKwargs, PyDict_New());
+    DECLARE_PYOBJECT(pyPickleEncoding, PyUnicode_FromString("latin1"));
+    ENSURE_SUCCESS(PyDict_SetItemString(pyPickleLoaderKwargs, "encoding", pyPickleEncoding) == 0);
+
+    DECLARE_PYOBJECT(pyIndexDictionary, PyObject_Call(pyPickleLoader, pyPickleLoaderArgs, pyPickleLoaderKwargs));
     archive->index.reserve(PyDict_Size(pyIndexDictionary));
 
     PyObject* pyPathInArchive;
@@ -161,27 +168,40 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
 
         PyObject* pyFileOffset = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::OFFSET);
         ENSURE_SUCCESS(pyFileOffset);
+        int64_t fileOffset = PyLong_AsLongLong(pyFileOffset);
+        ENSURE_SUCCESS(fileOffset != -1);
+
         PyObject* pyFileLength = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::LENGTH);
         ENSURE_SUCCESS(pyFileLength);
+        int64_t fileLength = PyLong_AsLongLong(pyFileLength);
+        ENSURE_SUCCESS(fileLength != -1);
 
         Py_ssize_t prefixLength = 0;
-        const char* prefixBytes = nullptr;
+        char* prefixBytes = nullptr;
         if (PyTuple_Size(pyIndexEntry) == 3)
         {
-            PyObject* pyPrefixString = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::PREFIX);
-            ENSURE_SUCCESS(pyPrefixString != nullptr);
-            ENSURE_SUCCESS(PyUnicode_GetLength(pyPrefixString) == 0); // TODO implement
+            PyObject* pyPrefixStringU = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::PREFIX);
+            ENSURE_SUCCESS(pyPrefixStringU != nullptr);
 
-            //// TODO The returned buffer always has an extra null byte appended (not included in size), regardless of whether there are any other null code points.
-            //prefixBytes = PyUnicode_AsUTF8AndSize(pyPrefixString, &prefixLength);
-            //ENSURE_SUCCESS(prefixBytes != nullptr);
-            //if (prefixLength == 0) prefixBytes = nullptr;
+            DECLARE_PYOBJECT(pyPrefixStringL, PyUnicode_AsLatin1String(pyPrefixStringU));
+            prefixBytes = PyBytes_AsString(pyPrefixStringL);
+            ENSURE_SUCCESS(prefixBytes != nullptr);
+
+            prefixLength = PyBytes_Size(pyPrefixStringL);
+            if (prefixLength == 0) prefixBytes = nullptr;
         }
 
         indexEntry = new RenPyIndexEntry();
-        indexEntry->offset = PyLong_AsLongLong(pyFileOffset) ^ encryptionKey;
-        indexEntry->length = PyLong_AsLongLong(pyFileLength) ^ encryptionKey;
-        ENSURE_SUCCESS(indexEntry->offset != -1 && indexEntry->length != -1);
+        indexEntry->offset = fileOffset ^ encryptionKey;
+        indexEntry->length = fileLength ^ encryptionKey;
+
+        indexEntry->prefixBytes = nullptr;
+        if (prefixLength > 0)
+        {
+            indexEntry->prefixBytes = new char[prefixLength];
+            memcpy(indexEntry->prefixBytes, prefixBytes, prefixLength);
+        }
+        indexEntry->prefixLength = prefixLength;
 
         const char* referenceToPath = PyUnicode_AsUTF8(pyPathInArchive);
         ENSURE_SUCCESS(referenceToPath != nullptr);
@@ -197,7 +217,8 @@ cleanup:
     delete uncompressedData;
     delete indexEntry;
 
-    for (auto i = pyObjectsToRecycle.begin(); i != pyObjectsToRecycle.end(); ++i) Py_DECREF(*i);
+    // TODO !!!!!!!!!!!!!!!!!!!!
+    //for (auto i = pyObjectsToRecycle.begin(); i != pyObjectsToRecycle.end(); ++i) Py_DECREF(*i);
     pyObjectsToRecycle.clear();
     Py_Finalize();
 
@@ -242,13 +263,21 @@ int MODULE_EXPORT ExtractItem(HANDLE storage, ExtractOperationParams params)
     outputStream = CFileStream::Open(params.DestPath, false, true);
     if (outputStream == nullptr) return SER_ERROR_WRITE;
 
-    char buffer[32 * 1024];
     uint64_t bytesLeft = indexEntry->length;
+    if (indexEntry->prefixLength > 0)
+    {
+        bytesLeft -= indexEntry->prefixLength;
+        ENSURE_SUCCESS_EX(outputStream->WriteBuffer(indexEntry->prefixBytes, indexEntry->prefixLength), SER_ERROR_WRITE);
+        ENSURE_SUCCESS_EX(params.Callbacks.FileProgress(params.Callbacks.signalContext, indexEntry->prefixLength), SER_USERABORT);
+    }
+
+    char buffer[32 * 1024];
     while (bytesLeft > 0)
     {
         uint64_t chunkSize = min(bytesLeft, sizeof(buffer));
-        ENSURE_SUCCESS_EX(archive->inputStream->ReadBuffer(buffer, chunkSize), SER_ERROR_READ);
         bytesLeft -= chunkSize;
+
+        ENSURE_SUCCESS_EX(archive->inputStream->ReadBuffer(buffer, chunkSize), SER_ERROR_READ);
         ENSURE_SUCCESS_EX(outputStream->WriteBuffer(buffer, chunkSize), SER_ERROR_WRITE);
         ENSURE_SUCCESS_EX(params.Callbacks.FileProgress(params.Callbacks.signalContext, chunkSize), SER_USERABORT);
     }

@@ -61,7 +61,7 @@ int MODULE_EXPORT OpenStorage(StorageOpenParams params, HANDLE* storage, Storage
 cleanup:
     if (status != SOR_SUCCESS)
     {
-        if (stream != nullptr) stream->Close();
+        stream->Close();
         delete stream;
     }
     return status;
@@ -124,7 +124,7 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     }
     while (zStatus == Z_BUF_ERROR);
     ENSURE_SUCCESS(zStatus == Z_OK);
-    delete compressedData;
+    delete[] compressedData;
     compressedData = nullptr;
 
     Py_Initialize();
@@ -133,7 +133,7 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     pyObjectsToRecycle.push_back(pyPickleArgs);
     PyObject* pyUncompressedData = PyByteArray_FromStringAndSize((const char*)uncompressedData, uncompressedSize);
     ENSURE_SUCCESS(pyUncompressedData != nullptr);
-    delete uncompressedData;
+    delete[] uncompressedData;
     uncompressedData = nullptr;
     ENSURE_SUCCESS(PyTuple_SetItem(pyPickleArgs, 0, pyUncompressedData) == 0);
     PyObject* pyPickleModuleName = PyUnicode_FromString("pickle");
@@ -254,7 +254,7 @@ int MODULE_EXPORT ExtractItem(HANDLE storage, ExtractOperationParams params)
     }
 
 cleanup:
-    if (outputStream != nullptr) outputStream->Close();
+    outputStream->Close();
     delete outputStream;
 
     return status;

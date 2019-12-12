@@ -2,8 +2,7 @@ version: 1.0.{build}
 
 branches:
   only:
-    - master
-    - master-gh
+    - fresh
 
 image: Visual Studio 2017
 
@@ -44,31 +43,19 @@ install:
   - vcpkg install bzip2:%P_ARCH%-windows
   - vcpkg install glib:%P_ARCH%-windows
   - vcpkg install boost-iostreams:%P_ARCH%-windows
+  - vcpkg install python3:%P_ARCH%-windows
   - cd %APPVEYOR_BUILD_FOLDER%
 
 cache:
   - c:\tools\vcpkg\installed\ -> appveyor.yml
 
-after_build:
-- cmd: >-
-    cd %APPVEYOR_BUILD_FOLDER%
+# after_build:
+# - cmd: >-
+#     cd %APPVEYOR_BUILD_FOLDER%
+#     xcopy bin\%configuration%-%platform%\* export\Observer /E /I /Y >nul
+#     cd export\Observer\modules
+#     7z a -r -sdel -bd -- Observer_RenPy_%configuration:~-4%_%P_ARCH%.7z renpy.so python37.dll zlib1.dll
+#     xcopy *.7z %APPVEYOR_BUILD_FOLDER% /Y >nul
 
-    xcopy bin\%configuration%-%platform%\* export\Observer /E /I /Y > nul
-
-    7z a -r -sdel -bd -x!*.ipdb -x!*.iobj -x!*.metagen -- Observer_%configuration:~-4%_%P_ARCH%_%PVER%.7z .\export\*
-
-artifacts:
-  - path: '*.7z'
-
-deploy:
-  - provider: BinTray
-    username: lazyhamster
-    api_key:
-      secure: zxzGL5vd4v2+QjlatWuQg3E7IPrt5a5sJ9bPIwfBonZ2bnShrU3wnjYuUhr19cvL
-    subject: lazyhamster
-    repo: FAR-Plugins
-    package: Observer
-    version: $(PVER)
-    publish: true
-    override: true
-    explode: false
+# artifacts:
+#   - path: '*.7z'

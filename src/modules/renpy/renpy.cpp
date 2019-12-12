@@ -213,8 +213,8 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     }
 
 cleanup:
-    delete compressedData;
-    delete uncompressedData;
+    delete[] compressedData;
+    delete[] uncompressedData;
     delete indexEntry;
 
     // TODO !!!!!!!!!!!!!!!!!!!!

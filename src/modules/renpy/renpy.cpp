@@ -147,7 +147,8 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     DECLARE_PYOBJECT(pyPickleModule, PyImport_Import(pyPickleModuleName));
     DECLARE_PYOBJECT(pyPickleLoader, PyObject_GetAttrString(pyPickleModule, "loads"));
 
-    DECLARE_PYOBJECT(pyPickleLoaderArgs, PyTuple_New(1));
+    PyObject* pyPickleLoaderArgs = PyTuple_New(1);
+    ENSURE_SUCCESS(pyPickleLoaderArgs != nullptr);
     ENSURE_SUCCESS(PyTuple_SetItem(pyPickleLoaderArgs, 0, pyUncompressedData) == 0);
 
     DECLARE_PYOBJECT(pyPickleLoaderKwargs, PyDict_New());
@@ -217,8 +218,7 @@ cleanup:
     delete[] uncompressedData;
     delete indexEntry;
 
-    // TODO !!!!!!!!!!!!!!!!!!!!
-    //for (auto i = pyObjectsToRecycle.begin(); i != pyObjectsToRecycle.end(); ++i) Py_DECREF(*i);
+    for (auto i = pyObjectsToRecycle.begin(); i != pyObjectsToRecycle.end(); ++i) Py_DECREF(*i);
     pyObjectsToRecycle.clear();
     Py_Finalize();
 

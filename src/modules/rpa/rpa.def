@@ -1,0 +1,5 @@
+LIBRARY "rpa.so"
+
+EXPORTS
+    LoadSubModule
+    UnloadSubModule

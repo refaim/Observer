@@ -58,7 +58,9 @@ after_build:
     7z a -r -sdel -bd -x!*.ipdb -x!*.iobj -x!*.metagen -- Observer_Refaim_%configuration:~-4%_%P_ARCH%_%PVER%.7z .\export\*
 
     cd export\Observer\modules
+
     7z a -r -sdel -bd -- Observer_Refaim_RenPy_%configuration:~-4%_%P_ARCH%.7z renpy.so python37.dll zlib1.dll
+
     xcopy *.7z %APPVEYOR_BUILD_FOLDER% /Y >nul
 
 artifacts:

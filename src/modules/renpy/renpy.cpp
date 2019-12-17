@@ -116,11 +116,10 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     ENSURE_SUCCESS(archiveSize > 0);
     int64_t archivePosition = stream->GetPos();
     ENSURE_SUCCESS(archivePosition > 0);
-    uLongf compressedSize = archiveSize - archivePosition; // TODO handle conversion of int64_t to uLongf
-    compressedData = new Bytef[compressedSize]();
-    ENSURE_SUCCESS(stream->ReadBuffer(compressedData, compressedSize));
+    uint32_t compressedSize = (uint32_t)(archiveSize - archivePosition);
+    compressedData = new Bytef[(size_t)compressedSize]();
+    ENSURE_SUCCESS(stream->ReadBuffer(compressedData, (size_t)compressedSize));
 
-    // TODO unpack in chunks, append to bytearray
     uLongf uncompressedSize = 0;
     uLongf compressionMultiplier = 4;
     int zStatus = Z_BUF_ERROR;
@@ -128,7 +127,7 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     {
         delete uncompressedData;
         uncompressedSize = compressedSize * compressionMultiplier;
-        uncompressedData = new Bytef[uncompressedSize]();
+        uncompressedData = new Bytef[(size_t)uncompressedSize]();
         zStatus = uncompress(uncompressedData, &uncompressedSize, compressedData, compressedSize);
         ++compressionMultiplier;
     }
@@ -139,7 +138,7 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
 
     Py_Initialize();
 
-    DECLARE_PYOBJECT(pyUncompressedData, PyByteArray_FromStringAndSize((const char*)uncompressedData, uncompressedSize));
+    DECLARE_PYOBJECT(pyUncompressedData, PyByteArray_FromStringAndSize((const char*)uncompressedData, (Py_ssize_t)uncompressedSize));
     delete[] uncompressedData;
     uncompressedData = nullptr;
 
@@ -197,7 +196,7 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
         indexEntry->length = fileLength ^ encryptionKey;
 
         indexEntry->prefixBytes = nullptr;
-        if (prefixLength > 0)
+        if (prefixLength > 0 && prefixBytes != nullptr)
         {
             indexEntry->prefixBytes = new char[prefixLength];
             memcpy(indexEntry->prefixBytes, prefixBytes, prefixLength);
@@ -230,10 +229,10 @@ int MODULE_EXPORT GetStorageItem(HANDLE storage, int item_index, StorageItemInfo
     auto archive = (RenPyArchive*)storage;
     if (archive == nullptr || item_index < 0)
         return GET_ITEM_ERROR;
-    if (item_index >= archive->index.size())
+    if (item_index >= (int)archive->index.size())
         return GET_ITEM_NOMOREITEMS;
 
-    auto indexEntry = archive->index.at(item_index);
+    auto indexEntry = archive->index.at((size_t)item_index);
 
     memset(item_info, 0, sizeof(StorageItemInfo));
     item_info->Attributes = FILE_ATTRIBUTE_NORMAL;
@@ -253,10 +252,10 @@ int MODULE_EXPORT ExtractItem(HANDLE storage, ExtractOperationParams params)
     auto archive = (RenPyArchive*)storage;
     if (archive == nullptr) return SER_ERROR_SYSTEM;
 
-    if (params.ItemIndex < 0 || params.ItemIndex >= archive->index.size())
+    if (params.ItemIndex < 0 || params.ItemIndex >= (int)archive->index.size())
         return SER_ERROR_SYSTEM;
 
-    auto indexEntry = archive->index.at(params.ItemIndex);
+    auto indexEntry = archive->index.at((size_t)params.ItemIndex);
     if (!archive->inputStream->Seek(indexEntry->offset, STREAM_BEGIN))
         return SER_ERROR_READ;
 

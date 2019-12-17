@@ -5,6 +5,7 @@
 #include <far3/plugin.hpp>
 #include <far3/DlgBuilder.hpp>
 #include <far3/PluginSettings.hpp>
+#include <far3/farcolor.hpp>
 
 #include "ModulesController.h"
 #include "PlugLang.h"
@@ -84,7 +85,7 @@ static void SaveSettings()
 
 static std::wstring ResolveFullPath(const wchar_t* input)
 {
-	wstring strFull;
+	std::wstring strFull;
 	size_t nLen = FSF.ConvertPath(CPM_FULL, input, NULL, 0);
 	if (nLen > 0)
 	{
@@ -125,7 +126,7 @@ static int SelectModuleToOpenFileAs()
 	size_t nNumModules = g_pController.NumModules();
 	
 	FarMenuItem* MenuItems = new FarMenuItem[nNumModules];
-	vector<wstring> MenuStrings(nNumModules);
+	std::vector<std::wstring> MenuStrings(nNumModules);
 
 	memset(MenuItems, 0, nNumModules * sizeof(FarMenuItem));
 	for (size_t i = 0; i < nNumModules; i++)
@@ -159,7 +160,7 @@ static bool StoragePasswordQuery(char* buffer, size_t bufferSize)
 	return false;
 }
 
-static void ReportFailedModules(std::vector<FailedModuleInfo> &failedModules)
+static void ReportFailedModules(const std::vector<FailedModuleInfo> &failedModules)
 {
 	if (!optVerboseModuleLoad || failedModules.empty()) return;
 
@@ -183,6 +184,116 @@ static void ReportFailedModules(std::vector<FailedModuleInfo> &failedModules)
 	Builder.ShowDialog();
 
 	delete [] boxList;
+}
+
+static std::wstring FileSizeToString(int64_t fileSize, bool keepBytes)
+{
+	wchar_t tmpBuf[64] = { 0 };
+	FSF.FormatFileSize(fileSize, 0, keepBytes ? FFFS_COMMAS : FFFS_FLOATSIZE, tmpBuf, _countof(tmpBuf));
+	return tmpBuf;
+}
+
+static void AddAttrLine(PluginDialogBuilder& Builder, const wchar_t* labelText, const wchar_t* valueText)
+{
+	const int cnLabelWidth = 16;
+	
+	auto dlgItem = Builder.AddReadonlyEditField(valueText, 36);
+	auto x1 = dlgItem->X1;
+	auto x2 = dlgItem->X2;
+	Builder.AddTextBefore(dlgItem, labelText);
+	dlgItem->X1 = x1 + cnLabelWidth;
+	dlgItem->X2 = x2 + cnLabelWidth;
+}
+
+static std::wstring FormatNodeSize(__int64 sizeVal)
+{
+	if (sizeVal > 0)
+	{
+		auto strFormattedSize = FileSizeToString(sizeVal, false);
+		auto strRawSize = std::to_wstring(sizeVal);
+
+		if (strFormattedSize != strRawSize)
+			return strFormattedSize + L" = " + strRawSize;
+		else 
+			return strRawSize;
+	}
+	
+	return L"0";
+}
+
+static intptr_t WINAPI AttrDlgProc(HANDLE hDlg, intptr_t Msg, intptr_t Param1, void* Param2)
+{
+	if (Msg == DN_CTLCOLORDLGITEM)
+	{
+		FarDialogItem dlgItem;
+		if (FarSInfo.SendDlgMessage(hDlg, DM_GETDLGITEMSHORT, Param1, &dlgItem) && (dlgItem.Type == DI_EDIT))
+		{
+			FarColor color;
+			if (FarSInfo.AdvControl(&OBSERVER_GUID, ACTL_GETCOLOR, COL_DIALOGTEXT, &color))
+			{
+				FarDialogItemColors* itemColors = static_cast<FarDialogItemColors*>(Param2);
+				if (itemColors->ColorsCount >= 4)
+					itemColors->Colors[0] = itemColors->Colors[2] = color;
+			}
+		}
+	}
+	else if (Msg == DN_BTNCLICK)
+	{
+		FarDialogItem dlgITem;
+		if (FarSInfo.SendDlgMessage(hDlg, DM_GETDLGITEMSHORT, Param1, &dlgITem) && (dlgITem.Type == DI_CHECKBOX))
+			return FALSE;
+	}
+
+	return FarSInfo.DefDlgProc(hDlg, Msg, Param1, Param2);
+}
+
+static void ShowAttributes(const ContentTreeNode* node)
+{
+	if (!node) return;
+
+	std::wstring strNodeSize = FormatNodeSize(node->GetSize());
+	std::wstring strNodePackedSize = FormatNodeSize(node->GetPackedSize());
+	std::wstring strNodeHardLinks = std::to_wstring(node->GetNumberOfHardLinks());
+	std::wstring strModTime = FileTimeToString(node->LastModificationTime);
+	std::wstring strCreateTime = FileTimeToString(node->CreationTime);
+	std::wstring strPath = node->GetPath();
+
+	PluginDialogBuilder Builder(FarSInfo, OBSERVER_GUID, GUID_OBS_OTHER_DIALOG, L"Properties", nullptr, AttrDlgProc);
+
+	Builder.AddText(node->Name())->Flags |= DIF_CENTERTEXT;
+	Builder.AddSeparator();
+
+	AddAttrLine(Builder, L"Path", strPath.c_str());
+	if (!node->IsDir())
+	{
+		AddAttrLine(Builder, L"Size", strNodeSize.c_str());
+		AddAttrLine(Builder, L"Packed Size", strNodePackedSize.c_str());
+		if (node->GetNumberOfHardLinks() > 0)
+		{
+			AddAttrLine(Builder, L"Hardlinks", strNodeHardLinks.c_str());
+		}
+	}
+	AddAttrLine(Builder, L"Created", strCreateTime.c_str());
+	AddAttrLine(Builder, L"Modified", strModTime.c_str());
+	AddAttrLine(Builder, L"Owner", node->GetOwner());
+
+	int isReadOnly = node->GetAttributes() & FILE_ATTRIBUTE_READONLY;
+	int isHidden = node->GetAttributes() & FILE_ATTRIBUTE_HIDDEN;
+	int isSystem = node->GetAttributes() & FILE_ATTRIBUTE_SYSTEM;
+	int isSymlink = node->GetAttributes() & FILE_ATTRIBUTE_REPARSE_POINT;
+	int isEncrypted = node->GetAttributes() & FILE_ATTRIBUTE_ENCRYPTED;
+
+	Builder.AddSeparator();
+	Builder.StartColumns();
+	Builder.AddCheckbox(L"ReadOnly", &isReadOnly);
+	Builder.AddCheckbox(L"Hidden", &isHidden);
+	Builder.AddCheckbox(L"System", &isSystem);
+	Builder.ColumnBreak();
+	Builder.AddCheckbox(L"Encrypted", &isEncrypted);
+	Builder.AddCheckbox(L"Symlink", &isSymlink);
+	Builder.EndColumns();
+	   
+	Builder.ShowDialog();
 }
 
 //-----------------------------------  Content functions ----------------------------------------
@@ -283,10 +394,10 @@ static bool GetSelectedPanelFilePath(std::wstring& nameStr)
 				panelDir->StructSize = sizeof(FarPanelDirectory);
 				FarSInfo.PanelControl(PANEL_ACTIVE, FCTL_GETPANELDIRECTORY, dirBufSize, panelDir);
 
-				wstring strNameBuffer = panelDir->Name;
+				std::wstring strNameBuffer = panelDir->Name;
 				IncludeTrailingPathDelim(strNameBuffer);
 
-				wstring itemName;
+				std::wstring itemName;
 				if (GetCurrentPanelItemName(PANEL_ACTIVE, itemName, false))
 				{
 					strNameBuffer.append(itemName);
@@ -298,23 +409,19 @@ static bool GetSelectedPanelFilePath(std::wstring& nameStr)
 	return !nameStr.empty();
 }
 
-static std::wstring FileSizeToString(int64_t fileSize, bool keepBytes)
-{
-	wchar_t tmpBuf[64] = { 0 };
-	FSF.FormatFileSize(fileSize, 0, keepBytes ? FFFS_COMMAS : FFFS_FLOATSIZE, tmpBuf, _countof(tmpBuf));
-	return tmpBuf;
-}
-
 static std::wstring ShortenPath(const std::wstring &path, size_t maxWidth)
 {
 	if (path.length() > maxWidth)
 	{
 		wchar_t* tmpBuf = _wcsdup(path.c_str());
-		FSF.TruncPathStr(tmpBuf, maxWidth);
+		if (tmpBuf)
+		{
+			FSF.TruncPathStr(tmpBuf, maxWidth);
 
-		std::wstring result(tmpBuf);
-		free(tmpBuf);
-		return result;
+			std::wstring result(tmpBuf);
+			free(tmpBuf);
+			return result;
+		}
 	}
 
 	return path;
@@ -446,7 +553,7 @@ enum FileOverwriteOptions
 	OverwriteRename = 5
 };
 
-static bool AskExtractOverwrite(FileOverwriteOptions &overwrite, wstring &destPath, const WIN32_FIND_DATAW* existingFile, const ContentTreeNode* newFile)
+static bool AskExtractOverwrite(FileOverwriteOptions &overwrite, std::wstring &destPath, const WIN32_FIND_DATAW* existingFile, const ContentTreeNode* newFile)
 {
 	__int64 nOldSize = ((__int64) existingFile->nFileSizeHigh >> 32) + existingFile->nFileSizeLow;
 	__int64 nNewSize = newFile->GetSize();
@@ -505,7 +612,7 @@ static bool AskExtractOverwrite(FileOverwriteOptions &overwrite, wstring &destPa
 	return true;
 }
 
-static void AskRename(wstring &filePath)
+static void AskRename(std::wstring &filePath)
 {
 	wchar_t tmpBuf[MAX_PATH] = {0};
 	wcscpy_s(tmpBuf, MAX_PATH, ExtractFileName(filePath.c_str()));
@@ -522,7 +629,7 @@ static void AskRename(wstring &filePath)
 	}
 }
 
-static int ExtractStorageItem(StorageObject* storage, const ContentTreeNode* item, wstring &destPath, bool showMessages, FileOverwriteOptions &doOverwrite, bool &skipOnError, ProgressContext *pctx)
+static int ExtractStorageItem(StorageObject* storage, const ContentTreeNode* item, std::wstring &destPath, bool showMessages, FileOverwriteOptions &doOverwrite, bool &skipOnError, ProgressContext *pctx)
 {
 	if (!item || !storage || item->IsDir())
 		return SER_ERROR_READ;
@@ -570,7 +677,7 @@ static int ExtractStorageItem(StorageObject* storage, const ContentTreeNode* ite
 	// Create directory if needed
 	if (!fAlreadyExists)
 	{
-		wstring strTargetDir = GetDirectoryName(destPath, false);
+		auto strTargetDir = GetDirectoryName(destPath, false);
 		if (!strTargetDir.empty())
 		{
 			if (!ForceDirectoryExist(strTargetDir))
@@ -589,7 +696,7 @@ static int ExtractStorageItem(StorageObject* storage, const ContentTreeNode* ite
 		SetFileAttributes(destPath.c_str(), fdExistingFile.dwFileAttributes & ~FILE_ATTRIBUTE_READONLY);
 	}
 
-	string strFilePassword;
+	char szPassBuffer[100] = { 0 };
 
 	int ret;
 	do
@@ -599,7 +706,7 @@ static int ExtractStorageItem(StorageObject* storage, const ContentTreeNode* ite
 		params.ItemIndex = item->StorageIndex;
 		params.Flags = 0;
 		params.DestPath = destPath.c_str();
-		params.Password = !strFilePassword.empty() ? strFilePassword.c_str() : nullptr;
+		params.Password = szPassBuffer;
 		params.Callbacks.FileProgress = ExtractProgress;
 		params.Callbacks.signalContext = pctx;
 
@@ -639,10 +746,7 @@ static int ExtractStorageItem(StorageObject* storage, const ContentTreeNode* ite
 		}
 		else if (ret == SER_PASSWORD_REQUIRED)
 		{
-			char passBuffer[100] = {0};
-			if (StoragePasswordQuery(passBuffer, sizeof(passBuffer)))
-				strFilePassword = passBuffer;
-			else
+			if (!StoragePasswordQuery(szPassBuffer, _countof(szPassBuffer)))
 				ret = SER_USERABORT;
 		}
 
@@ -723,7 +827,7 @@ int BatchExtract(StorageObject* info, ContentNodeList &items, __int64 totalExtra
 		}
 		
 		ContentTreeNode* nextItem = *cit;
-		wstring strFullTargetPath = GetFinalExtractionPath(info, nextItem, extParams.strDestPath.c_str(), extParams.nPathProcessing);
+		auto strFullTargetPath = GetFinalExtractionPath(info, nextItem, extParams.strDestPath.c_str(), extParams.nPathProcessing);
 		
 		if (nextItem->IsDir())
 		{
@@ -811,7 +915,7 @@ void WINAPI SetStartupInfoW(const struct PluginStartupInfo *Info)
 		wmemset(wszPluginLocation, 0, MAX_PATH);
 	}
 
-	wstring strConfigLocation(wszPluginLocation);
+	std::wstring strConfigLocation(wszPluginLocation);
 	
 	Config cfg;
 	cfg.ParseFile(strConfigLocation + CONFIG_FILE);
@@ -819,7 +923,7 @@ void WINAPI SetStartupInfoW(const struct PluginStartupInfo *Info)
 
 	LoadSettings(&cfg);
 
-	vector<FailedModuleInfo> fails;
+	std::vector<FailedModuleInfo> fails;
 	g_pController.Init(wszPluginLocation, &cfg, fails);
 	ReportFailedModules(fails);
 }
@@ -908,8 +1012,8 @@ HANDLE WINAPI OpenW(const struct OpenInfo *OInfo)
 	if (g_pController.NumModules() == 0)
 		return 0;
 	
-	wstring strFullSourcePath;
-	wstring strSubPath;
+	std::wstring strFullSourcePath;
+	std::wstring strSubPath;
 	int nOpenModuleIndex = -1;
 	
 	if ((OInfo->OpenFrom == OPEN_COMMANDLINE) && optUsePrefix)
@@ -1208,14 +1312,13 @@ intptr_t WINAPI GetFilesW(GetFilesInfo *gfInfo)
 
 intptr_t WINAPI ProcessPanelInputW(const struct ProcessPanelInputInfo* piInfo)
 {
-	if (piInfo->Rec.EventType != KEY_EVENT) return FALSE;
+	if (!piInfo->hPanel || (piInfo->Rec.EventType != KEY_EVENT)) return FALSE;
 	
-	KEY_EVENT_RECORD evtRec = piInfo->Rec.Event.KeyEvent;
-	if (evtRec.bKeyDown && evtRec.wVirtualKeyCode == VK_F6 && ((evtRec.dwControlKeyState & LEFT_ALT_PRESSED) || (evtRec.dwControlKeyState & RIGHT_ALT_PRESSED)))
+	const KEY_EVENT_RECORD &evtRec = piInfo->Rec.Event.KeyEvent;
+	StorageObject* storage = reinterpret_cast<StorageObject*>(piInfo->hPanel);
+
+	if (evtRec.bKeyDown && evtRec.wVirtualKeyCode == VK_F6 && CheckControlKeys(evtRec, false, true, false))
 	{
-		StorageObject* info = reinterpret_cast<StorageObject*>(piInfo->hPanel);
-		if (!info) return FALSE;
-		
 		PanelInfo pi = {sizeof(PanelInfo)};
 		if (!FarSInfo.PanelControl(PANEL_ACTIVE, FCTL_GETPANELINFO, 0, &pi)) return FALSE;
 		if (pi.SelectedItemsNumber == 0) return FALSE;
@@ -1233,7 +1336,7 @@ intptr_t WINAPI ProcessPanelInputW(const struct ProcessPanelInputInfo* piInfo)
 			FarSInfo.PanelControl(PANEL_ACTIVE, FCTL_GETSELECTEDPANELITEM, i, &gppi);
 			if (wcscmp(pItem->FileName, L"..") != 0)
 			{
-				ContentTreeNode* child = info->CurrentDir()->GetChildByName(pItem->FileName);
+				ContentTreeNode* child = storage->CurrentDir()->GetChildByName(pItem->FileName);
 				if (child) CollectFileList(child, vcExtractItems, nTotalExtractSize, true);
 			}
 			
@@ -1243,16 +1346,27 @@ intptr_t WINAPI ProcessPanelInputW(const struct ProcessPanelInputInfo* piInfo)
 		// Check if we have something to extract
 		if (vcExtractItems.size() == 0) return TRUE;
 
-		wchar_t *wszTargetDir = _wcsdup(info->StoragePath());
+		wchar_t *wszTargetDir = _wcsdup(storage->StoragePath());
 		CutFileNameFromPath(wszTargetDir, true);
 		
 		ExtractSelectedParams extParams;
 		extParams.strDestPath = wszTargetDir;
 		extParams.bSilent = true;
 
-		BatchExtract(info, vcExtractItems, nTotalExtractSize, extParams);
+		BatchExtract(storage, vcExtractItems, nTotalExtractSize, extParams);
 
 		free(wszTargetDir);
+		
+		return TRUE;
+	}
+	else if (evtRec.bKeyDown && evtRec.wVirtualKeyCode == 'A' && CheckControlKeys(evtRec, true, false, false))
+	{
+		std::wstring itemName;
+		if (GetCurrentPanelItemName(PANEL_ACTIVE, itemName, true) && (itemName != L".."))
+		{
+			ContentTreeNode* selectedItem = storage->CurrentDir()->GetChildByName(itemName.c_str());
+			ShowAttributes(selectedItem);
+		}
 		
 		return TRUE;
 	}

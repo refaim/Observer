@@ -1,6 +1,8 @@
 #include "StdAfx.h"
 #include "CommonFunc.h"
 
+#include <ShlObj.h>
+
 bool CheckEsc()
 {
 	DWORD dwNumEvents;
@@ -93,12 +95,12 @@ const wchar_t* ExtractFileName(const wchar_t* fullPath)
 		return fullPath;
 }
 
-wstring GetDirectoryName(const wstring &fullPath, bool includeTrailingDelim)
+std::wstring GetDirectoryName(const std::wstring &fullPath, bool includeTrailingDelim)
 {
-	wstring strResult;
+	std::wstring strResult;
 
 	size_t nLastSlash = fullPath.find_last_of('\\');
-	if (nLastSlash != wstring::npos)
+	if (nLastSlash != std::wstring::npos)
 	{
 		size_t nCount = includeTrailingDelim ? nLastSlash + 1 : nLastSlash;
 		strResult = fullPath.substr(0, nCount);
@@ -195,4 +197,16 @@ void UpdateFileTime(const wchar_t* path, const FILETIME* createTime, const FILET
 			CloseHandle(hTmp);
 		}
 	}
+}
+
+static inline bool CheckSingleState(bool isNeeded, DWORD dwState, DWORD dwControlFlags)
+{
+	return isNeeded == ((dwState & dwControlFlags) != 0);
+}
+
+bool CheckControlKeys(const KEY_EVENT_RECORD &evtRec, bool needCtrl, bool needAlt, bool needShift)
+{
+	return CheckSingleState(needCtrl, evtRec.dwControlKeyState, LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)
+		&& CheckSingleState(needAlt, evtRec.dwControlKeyState, LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)
+		&& CheckSingleState(needShift, evtRec.dwControlKeyState, SHIFT_PRESSED);
 }

@@ -12,7 +12,7 @@ bool ForceDirectoryExist(const std::wstring& path);
 bool CheckEsc();
 
 const wchar_t* ExtractFileName(const wchar_t* fullPath);
-wstring GetDirectoryName(const wstring &fullPath, bool includeTrailingDelim);
+std::wstring GetDirectoryName(const std::wstring &fullPath, bool includeTrailingDelim);
 void CutFileNameFromPath(wchar_t* fullPath, bool includeTrailingDelim);
 
 void IncludeTrailingPathDelim(wchar_t *pathBuf, size_t bufMaxSize);
@@ -24,5 +24,7 @@ std::wstring FormatString(const wchar_t* fmt_str, ...);
 std::wstring FileTimeToString(FILETIME ft);
 
 void UpdateFileTime(const wchar_t* path, const FILETIME* createTime, const FILETIME* modTime);
+
+bool CheckControlKeys(const KEY_EVENT_RECORD &evtRec, bool needCtrl, bool needAlt, bool needShift);
 
 #endif // CommonFunc_h__

@@ -6,7 +6,7 @@
 #include "ModuleCRT.h"
 #include "modulecrt\Streams.h"
 
-#include <python3.7\Python.h>
+#include <Python.h>
 #include <zlib.h>
 
 #define FILE_SIGNATURE_RPA30 "RPA-3.0"

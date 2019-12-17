@@ -43,7 +43,6 @@ install:
   - vcpkg install bzip2:%P_ARCH%-windows
   - vcpkg install glib:%P_ARCH%-windows
   - vcpkg install boost-iostreams:%P_ARCH%-windows
-  - vcpkg install python3:%P_ARCH%-windows
   - cd %APPVEYOR_BUILD_FOLDER%
 
 cache:
@@ -65,7 +64,7 @@ after_build:
 
     cd %APPVEYOR_BUILD_FOLDER%
 
-    7z a -r -sdel -bd -x!*.ipdb -x!*.iobj -x!*.metagen -- Observer_Refaim_%configuration:~-4%_%P_ARCH%_%PVER%.7z .\export\*
+    7z a -r -sdel -bd -x!*.ipdb -x!*.iobj -x!*.metagen -- Observer_Refaim_%configuration:~-4%_%P_ARCH%.7z .\export\*
 
 artifacts:
   - path: '*.7z'

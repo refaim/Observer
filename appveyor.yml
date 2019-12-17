@@ -71,5 +71,14 @@ artifacts:
   - path: '*.7z'
 
 deploy:
-  - provider: Environment
-    name: BinTray-Observer
+  - provider: BinTray
+    username: refaim
+    api_key:
+      secure: pKZQ3ll3GRbdHxfi43xCiI2jcAII11t/N7/BDuo2OC/vDjLmER21SmEeu9s6Peu3
+    subject: refaim
+    repo: Observer
+    package: Observer
+    version: $(PVER)
+    publish: true
+    override: true
+    explode: false

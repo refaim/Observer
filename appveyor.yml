@@ -71,6 +71,8 @@ artifacts:
 
 deploy:
   - provider: BinTray
+    on:
+      branch: master
     username: refaim
     api_key:
       secure: pKZQ3ll3GRbdHxfi43xCiI2jcAII11t/N7/BDuo2OC/vDjLmER21SmEeu9s6Peu3

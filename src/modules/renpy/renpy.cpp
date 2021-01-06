@@ -15,7 +15,8 @@
 #define ENSURE_SUCCESS(SUCCESS_CONDITION) if (!(SUCCESS_CONDITION)) { success = false; goto cleanup; }
 #define ENSURE_SUCCESS_EX(SUCCESS_CONDITION, ERROR) if (!(SUCCESS_CONDITION)) { status = ERROR; goto cleanup; }
 
-#define DECLARE_PYOBJECT(VAR, EXPR) PyObject* VAR = EXPR; ENSURE_SUCCESS(VAR != nullptr); pyObjectsToRecycle.push_back(VAR);
+#define DECLARE_PYOBJECT(VAR, EXPR) PyObject* VAR = EXPR; ENSURE_SUCCESS(VAR != nullptr);
+#define DECLARE_RECYCLABLE_PYOBJECT(VAR, EXPR) DECLARE_PYOBJECT(VAR, EXPR) pyObjectsToRecycle.push_back(VAR);
 
 enum PyIndexEntryValueTypeIndex
 {
@@ -150,19 +151,19 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     delete[] decompressedIndex;
     decompressedIndex = nullptr;
 
-    DECLARE_PYOBJECT(pyPickleModuleName, PyUnicode_FromString("pickle"));
-    DECLARE_PYOBJECT(pyPickleModule, PyImport_Import(pyPickleModuleName));
-    DECLARE_PYOBJECT(pyPickleLoader, PyObject_GetAttrString(pyPickleModule, "loads"));
+    DECLARE_RECYCLABLE_PYOBJECT(pyPickleModuleName, PyUnicode_FromString("pickle"));
+    DECLARE_RECYCLABLE_PYOBJECT(pyPickleModule, PyImport_Import(pyPickleModuleName));
+    DECLARE_RECYCLABLE_PYOBJECT(pyPickleLoader, PyObject_GetAttrString(pyPickleModule, "loads"));
 
     PyObject* pyPickleLoaderArgs = PyTuple_New(1);
     ENSURE_SUCCESS(pyPickleLoaderArgs != nullptr);
     ENSURE_SUCCESS(PyTuple_SetItem(pyPickleLoaderArgs, 0, pyPickledIndex) == 0);
 
-    DECLARE_PYOBJECT(pyPickleLoaderKwargs, PyDict_New());
+    DECLARE_RECYCLABLE_PYOBJECT(pyPickleLoaderKwargs, PyDict_New());
     DECLARE_PYOBJECT(pyPickleEncoding, PyUnicode_FromString("latin1"));
     ENSURE_SUCCESS(PyDict_SetItemString(pyPickleLoaderKwargs, "encoding", pyPickleEncoding) == 0);
 
-    DECLARE_PYOBJECT(pyIndexDictionary, PyObject_Call(pyPickleLoader, pyPickleLoaderArgs, pyPickleLoaderKwargs));
+    DECLARE_RECYCLABLE_PYOBJECT(pyIndexDictionary, PyObject_Call(pyPickleLoader, pyPickleLoaderArgs, pyPickleLoaderKwargs));
     archive->index.reserve(PyDict_Size(pyIndexDictionary));
 
     PyObject* pyPathInArchive;
@@ -171,16 +172,13 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     while (PyDict_Next(pyIndexDictionary, &i, &pyPathInArchive, &pyIndexEntries))
     {
         ENSURE_SUCCESS(PyList_Size(pyIndexEntries) == 1); // TODO implement
-        PyObject* pyIndexEntry = PyList_GetItem(pyIndexEntries, 0);
-        ENSURE_SUCCESS(pyIndexEntry != nullptr);
+        DECLARE_PYOBJECT(pyIndexEntry, PyList_GetItem(pyIndexEntries, 0));
 
-        PyObject* pyFileOffset = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::OFFSET);
-        ENSURE_SUCCESS(pyFileOffset);
+        DECLARE_PYOBJECT(pyFileOffset, PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::OFFSET));
         int64_t fileOffset = PyLong_AsLongLong(pyFileOffset);
         ENSURE_SUCCESS(fileOffset != -1);
 
-        PyObject* pyFileSize = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::LENGTH);
-        ENSURE_SUCCESS(pyFileSize);
+        DECLARE_PYOBJECT(pyFileSize, PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::LENGTH));
         int64_t fileSize = PyLong_AsLongLong(pyFileSize);
         ENSURE_SUCCESS(fileSize != -1);
 
@@ -191,11 +189,11 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
             PyObject* pyPrefixStringU = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::PREFIX);
             ENSURE_SUCCESS(pyPrefixStringU != nullptr);
 
-            DECLARE_PYOBJECT(pyPrefixStringL, PyUnicode_AsLatin1String(pyPrefixStringU));
-            prefixBytes = PyBytes_AsString(pyPrefixStringL);
+            DECLARE_RECYCLABLE_PYOBJECT(pyPrefixStringA, PyUnicode_AsLatin1String(pyPrefixStringU));
+            prefixBytes = PyBytes_AsString(pyPrefixStringA);
             ENSURE_SUCCESS(prefixBytes != nullptr);
 
-            prefixLength = PyBytes_Size(pyPrefixStringL);
+            prefixLength = PyBytes_Size(pyPrefixStringA);
             if (prefixLength == 0) prefixBytes = nullptr;
         }
 

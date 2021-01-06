@@ -58,6 +58,8 @@ after_build:
 
     7z a -bd -- Observer_Refaim_RenPy_%configuration:~-4%_%P_ARCH%.7z renpy.so python37.dll zlib1.dll
 
+    7z a -bd -- Observer_Refaim_Zanzarah_%configuration:~-4%_%P_ARCH%.7z zanzarah.so
+
     xcopy *.7z %APPVEYOR_BUILD_FOLDER% /Y >nul
 
     del /Q *.7z

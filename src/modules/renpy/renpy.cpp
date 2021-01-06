@@ -28,7 +28,7 @@ struct RenPyIndexEntry
 {
     std::string path;
     int64_t offset;
-    int64_t length;
+    int64_t size;
     char* prefixBytes;
     size_t prefixLength;
 };
@@ -41,7 +41,7 @@ struct RenPyArchive
 
 int MODULE_EXPORT OpenStorage(StorageOpenParams params, HANDLE* storage, StorageGeneralInfo* info)
 {
-    int status = SOR_SUCCESS;
+    bool success = true;
 
     if (!SignatureMatchOrNull(params.Data, params.DataSize, FILE_SIGNATURE_RPA30))
         return SOR_INVALID_FILE;
@@ -49,26 +49,32 @@ int MODULE_EXPORT OpenStorage(StorageOpenParams params, HANDLE* storage, Storage
     auto stream = CFileStream::Open(params.FilePath, true, false);
     if (stream == nullptr) return SOR_INVALID_FILE;
 
-    char signatureCandidate[sizeof(FILE_SIGNATURE_RPA30) - 1];
-    ENSURE_SUCCESS_EX(stream->ReadBuffer(signatureCandidate, sizeof(signatureCandidate)), SOR_INVALID_FILE);
-    ENSURE_SUCCESS_EX(SignatureMatchOrNull(signatureCandidate, strlen(FILE_SIGNATURE_RPA30), FILE_SIGNATURE_RPA30), SOR_INVALID_FILE);
-
     auto archive = new RenPyArchive();
     archive->inputStream = stream;
     *storage = archive;
 
     memset(info, 0, sizeof(StorageGeneralInfo));
-    ENSURE_SUCCESS_EX(wcscpy_s(info->Format, STORAGE_FORMAT_NAME_MAX_LEN, L"RenPy Archive") == 0, SOR_INVALID_FILE);
-    ENSURE_SUCCESS_EX(wcscpy_s(info->Compression, STORAGE_PARAM_MAX_LEN, L"-") == 0, SOR_INVALID_FILE);
-    ENSURE_SUCCESS_EX(wcscpy_s(info->Comment, STORAGE_PARAM_MAX_LEN, L"-") == 0, SOR_INVALID_FILE);
+    ENSURE_SUCCESS(wcscpy_s(info->Format, STORAGE_FORMAT_NAME_MAX_LEN, L"RenPy Archive") == 0);
+    ENSURE_SUCCESS(wcscpy_s(info->Compression, STORAGE_PARAM_MAX_LEN, L"-") == 0);
+    ENSURE_SUCCESS(wcscpy_s(info->Comment, STORAGE_PARAM_MAX_LEN, L"-") == 0);
 
 cleanup:
-    if (status != SOR_SUCCESS)
+    if (!success)
     {
+        if (archive != nullptr)
+        {
+            archive->inputStream = nullptr;
+            delete archive;
+            archive = nullptr;
+        }
+        *storage = nullptr;
+
         stream->Close();
         delete stream;
+
+        return SOR_INVALID_FILE;
     }
-    return status;
+    return SOR_SUCCESS;
 }
 
 void MODULE_EXPORT CloseStorage(HANDLE storage)
@@ -171,10 +177,10 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
         int64_t fileOffset = PyLong_AsLongLong(pyFileOffset);
         ENSURE_SUCCESS(fileOffset != -1);
 
-        PyObject* pyFileLength = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::LENGTH);
-        ENSURE_SUCCESS(pyFileLength);
-        int64_t fileLength = PyLong_AsLongLong(pyFileLength);
-        ENSURE_SUCCESS(fileLength != -1);
+        PyObject* pyFileSize = PyTuple_GetItem(pyIndexEntry, PyIndexEntryValueTypeIndex::LENGTH);
+        ENSURE_SUCCESS(pyFileSize);
+        int64_t fileSize = PyLong_AsLongLong(pyFileSize);
+        ENSURE_SUCCESS(fileSize != -1);
 
         Py_ssize_t prefixLength = 0;
         char* prefixBytes = nullptr;
@@ -193,7 +199,7 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
 
         indexEntry = new RenPyIndexEntry();
         indexEntry->offset = fileOffset ^ encryptionKey;
-        indexEntry->length = fileLength ^ encryptionKey;
+        indexEntry->size = fileSize ^ encryptionKey;
 
         indexEntry->prefixBytes = nullptr;
         if (prefixLength > 0 && prefixBytes != nullptr)
@@ -236,8 +242,8 @@ int MODULE_EXPORT GetStorageItem(HANDLE storage, int item_index, StorageItemInfo
 
     memset(item_info, 0, sizeof(StorageItemInfo));
     item_info->Attributes = FILE_ATTRIBUTE_NORMAL;
-    item_info->Size = indexEntry->length;
-    item_info->PackedSize = indexEntry->length;
+    item_info->Size = indexEntry->size;
+    item_info->PackedSize = indexEntry->size;
     if (MultiByteToWideChar(CP_UTF8, 0, indexEntry->path.c_str(), -1, item_info->Path, STRBUF_SIZE(item_info->Path)) == 0)
         return GET_ITEM_ERROR;
 
@@ -262,7 +268,7 @@ int MODULE_EXPORT ExtractItem(HANDLE storage, ExtractOperationParams params)
     outputStream = CFileStream::Open(params.DestPath, false, true);
     if (outputStream == nullptr) return SER_ERROR_WRITE;
 
-    uint64_t bytesLeft = indexEntry->length;
+    uint64_t bytesLeft = indexEntry->size;
     if (indexEntry->prefixLength > 0)
     {
         bytesLeft -= indexEntry->prefixLength;

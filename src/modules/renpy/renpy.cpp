@@ -103,8 +103,8 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     auto stream = archive->inputStream;
 
     bool success = true;
-    Bytef* compressedData = nullptr;
-    Bytef* uncompressedData = nullptr;
+    Bytef* compressedIndex = nullptr;
+    Bytef* decompressedIndex = nullptr;
     RenPyIndexEntry* indexEntry = nullptr;
     std::vector<PyObject*> pyObjectsToRecycle;
 
@@ -120,33 +120,33 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     ENSURE_SUCCESS(stream->Seek(indexOffset, STREAM_BEGIN));
     int64_t archiveSize = stream->GetSize();
     ENSURE_SUCCESS(archiveSize > 0);
-    int64_t archivePosition = stream->GetPos();
-    ENSURE_SUCCESS(archivePosition > 0);
-    uint32_t compressedSize = (uint32_t)(archiveSize - archivePosition);
-    compressedData = new Bytef[(size_t)compressedSize]();
-    ENSURE_SUCCESS(stream->ReadBuffer(compressedData, (size_t)compressedSize));
+    int64_t indexPosition = stream->GetPos();
+    ENSURE_SUCCESS(indexPosition > 0);
+    uint32_t compressedIndexSize = (uint32_t)(archiveSize - indexPosition);
+    compressedIndex = new Bytef[(size_t)compressedIndexSize]();
+    ENSURE_SUCCESS(stream->ReadBuffer(compressedIndex, (size_t)compressedIndexSize));
 
-    uLongf uncompressedSize = 0;
+    uLongf decompressedIndexSize = 0;
     uLongf compressionMultiplier = 4;
     int zStatus = Z_BUF_ERROR;
     do
     {
-        delete uncompressedData;
-        uncompressedSize = compressedSize * compressionMultiplier;
-        uncompressedData = new Bytef[(size_t)uncompressedSize]();
-        zStatus = uncompress(uncompressedData, &uncompressedSize, compressedData, compressedSize);
+        delete decompressedIndex;
+        decompressedIndexSize = compressedIndexSize * compressionMultiplier;
+        decompressedIndex = new Bytef[(size_t)decompressedIndexSize]();
+        zStatus = uncompress(decompressedIndex, &decompressedIndexSize, compressedIndex, compressedIndexSize);
         ++compressionMultiplier;
     }
     while (zStatus == Z_BUF_ERROR);
     ENSURE_SUCCESS(zStatus == Z_OK);
-    delete[] compressedData;
-    compressedData = nullptr;
+    delete[] compressedIndex;
+    compressedIndex = nullptr;
 
     Py_Initialize();
 
-    DECLARE_PYOBJECT(pyUncompressedData, PyByteArray_FromStringAndSize((const char*)uncompressedData, (Py_ssize_t)uncompressedSize));
-    delete[] uncompressedData;
-    uncompressedData = nullptr;
+    DECLARE_PYOBJECT(pyPickledIndex, PyByteArray_FromStringAndSize((const char*)decompressedIndex, (Py_ssize_t)decompressedIndexSize));
+    delete[] decompressedIndex;
+    decompressedIndex = nullptr;
 
     DECLARE_PYOBJECT(pyPickleModuleName, PyUnicode_FromString("pickle"));
     DECLARE_PYOBJECT(pyPickleModule, PyImport_Import(pyPickleModuleName));
@@ -154,7 +154,7 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
 
     PyObject* pyPickleLoaderArgs = PyTuple_New(1);
     ENSURE_SUCCESS(pyPickleLoaderArgs != nullptr);
-    ENSURE_SUCCESS(PyTuple_SetItem(pyPickleLoaderArgs, 0, pyUncompressedData) == 0);
+    ENSURE_SUCCESS(PyTuple_SetItem(pyPickleLoaderArgs, 0, pyPickledIndex) == 0);
 
     DECLARE_PYOBJECT(pyPickleLoaderKwargs, PyDict_New());
     DECLARE_PYOBJECT(pyPickleEncoding, PyUnicode_FromString("latin1"));
@@ -219,8 +219,8 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     }
 
 cleanup:
-    delete[] compressedData;
-    delete[] uncompressedData;
+    delete[] compressedIndex;
+    delete[] decompressedIndex;
     delete indexEntry;
 
     for (auto i = pyObjectsToRecycle.begin(); i != pyObjectsToRecycle.end(); ++i) Py_DECREF(*i);

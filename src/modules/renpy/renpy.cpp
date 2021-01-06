@@ -108,14 +108,16 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
     RenPyIndexEntry* indexEntry = nullptr;
     std::vector<PyObject*> pyObjectsToRecycle;
 
-    char buffer[sizeof(int64_t)];
-    char* dummy;
-    ENSURE_SUCCESS(stream->Seek(strlen(FILE_SIGNATURE_RPA30) + strlen(WHITESPACE) + sizeof(int64_t), STREAM_BEGIN));
-    ENSURE_SUCCESS(stream->ReadBuffer(&buffer, sizeof(int64_t)));
-    int64_t indexOffset = std::strtoll(buffer, &dummy, 16);
+    const uint32_t indexPositionStringLength = 16;
+    char buffer[indexPositionStringLength];
+    ENSURE_SUCCESS(stream->Seek(strlen(FILE_SIGNATURE_RPA30) + strlen(WHITESPACE), STREAM_BEGIN));
+    ENSURE_SUCCESS(stream->ReadBuffer(&buffer, indexPositionStringLength));
+    int64_t indexOffset = std::strtoll(buffer, nullptr, 16);
+
+    memset(buffer, 0, indexPositionStringLength);
     ENSURE_SUCCESS(stream->Seek(strlen(WHITESPACE), STREAM_CURRENT));
-    ENSURE_SUCCESS(stream->ReadBuffer(&buffer, sizeof(int64_t)));
-    int64_t encryptionKey = std::strtoll(buffer, &dummy, 16);
+    ENSURE_SUCCESS(stream->ReadBuffer(&buffer, 8));
+    int64_t encryptionKey = std::strtoll(buffer, nullptr, 16);
 
     ENSURE_SUCCESS(stream->Seek(indexOffset, STREAM_BEGIN));
     int64_t archiveSize = stream->GetSize();

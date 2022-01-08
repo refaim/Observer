@@ -14,3 +14,5 @@
 
 // Additional headers
 #include <memory>
+
+#include <boost/numeric/conversion/cast.hpp>

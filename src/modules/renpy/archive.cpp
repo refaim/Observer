@@ -58,10 +58,10 @@ namespace renpy
         int32_t zlib_status = Z_BUF_ERROR;
         do
         {
-            uncompressed_length = static_cast<uLongf>(input_buffer.size() * static_cast<size_t>(compression_multiplier));
-            output_buffer.resize(static_cast<size_t>(uncompressed_length));
+            uncompressed_length = boost::numeric_cast<uLongf>(input_buffer.size() * boost::numeric_cast<size_t>(compression_multiplier));
+            output_buffer.resize(boost::numeric_cast<size_t>(uncompressed_length));
 
-            zlib_status = uncompress(reinterpret_cast<uint8_t*>(output_buffer.data()), &uncompressed_length, reinterpret_cast<const uint8_t*>(input_buffer.c_str()), static_cast<uLong>(input_buffer.size()));
+            zlib_status = uncompress(reinterpret_cast<uint8_t*>(output_buffer.data()), &uncompressed_length, reinterpret_cast<const uint8_t*>(input_buffer.c_str()), boost::numeric_cast<uLong>(input_buffer.size()));
 
             ++compression_multiplier;
         }
@@ -70,7 +70,7 @@ namespace renpy
         if (zlib_status != Z_OK)
             throw kriabal::RuntimeError();
 
-        output_buffer.resize(static_cast<size_t>(uncompressed_length));
+        output_buffer.resize(boost::numeric_cast<size_t>(uncompressed_length));
     }
 
     void Archive::ParsePythonIndex(std::string& input_buffer, int64_t encryption_key)

@@ -4,6 +4,7 @@
 #include "kriabal.h"
 
 #include <algorithm>
+#include <boost/numeric/conversion/cast.hpp>
 
 #include "ModuleCRT.h"
 
@@ -31,7 +32,7 @@ namespace kriabal
     const Item& Tome::GetItem(int64_t index) const
     {
         if (index < 0) throw RuntimeError();
-        if (static_cast<size_t>(index) >= items_.size()) throw ItemIndexTooLargeError();
+        if (boost::numeric_cast<size_t>(index) >= items_.size()) throw ItemIndexTooLargeError();
         return *items_.at(index).get();
     }
 

@@ -24,6 +24,12 @@
     <ClCompile Include="renpy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="python.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="archive.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="renpy.def">
@@ -37,5 +43,14 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="python.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="archive.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="C:\Python37-x64\python37_d.dll" />
   </ItemGroup>
 </Project>

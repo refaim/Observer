@@ -1,0 +1,63 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
+
+#include "stdafx.h"
+
+#include "python.h"
+
+namespace renpy::python
+{
+    Context::Context()
+    {
+        Py_Initialize();
+    }
+
+    Context::~Context()
+    {
+        Py_Finalize();
+    }
+
+    WeakReference::WeakReference(PyObject* ptr)
+    {
+        if (ptr == nullptr)
+            throw NullReferenceError();
+        raw_ = ptr;
+    }
+
+    WeakReference::~WeakReference()
+    {
+        raw_ = nullptr;
+    }
+
+    PyObject* WeakReference::Raw()
+    {
+        return raw_;
+    }
+
+    StrongReference::StrongReference(PyObject* ptr) : WeakReference(ptr) {}
+
+    StrongReference::~StrongReference()
+    {
+        Py_DECREF(raw_);
+    }
+
+    std::unique_ptr<WeakReference> MakeWeakRef(PyObject* ptr)
+    {
+        return std::make_unique<WeakReference>(ptr);
+    }
+
+    std::unique_ptr<StrongReference> MakeStrongRef(PyObject* ptr)
+    {
+        return std::make_unique<StrongReference>(ptr);
+    }
+
+    PyObject* RawPtr(std::unique_ptr<WeakReference>& ref)
+    {
+        return ref.get()->Raw();
+    }
+
+    PyObject* RawPtr(std::unique_ptr<StrongReference>& ref)
+    {
+        return ref.get()->Raw();
+    }
+}

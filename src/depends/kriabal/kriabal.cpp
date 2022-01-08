@@ -51,11 +51,11 @@ namespace kriabal
 
         uint64_t bytes_left = item.size_in_bytes;
 
-        int64_t header_size_in_bytes = ExtractItemHeader(item, *output_stream);
-        if (header_size_in_bytes > 0)
+        if (!item.header.empty())
         {
-            bytes_left -= header_size_in_bytes;
-            ReportExtractionProgress(params.Callbacks, header_size_in_bytes);
+            output_stream->WriteBytes(item.header, item.header.size());
+            bytes_left -= item.header.size();
+            ReportExtractionProgress(params.Callbacks, item.header.size());
         }
 
         auto buffer = std::make_unique<std::string>(32 * 1024, '\0');
@@ -70,11 +70,6 @@ namespace kriabal
             bytes_left -= chunk_length;
             ReportExtractionProgress(params.Callbacks, chunk_length);
         }
-    }
-
-    size_t Tome::ExtractItemHeader(const Item& item, stream::FileStream& output_stream)
-    {
-        return 0;
     }
 
     void Tome::ReportExtractionProgress(const ExtractProcessCallbacks& callbacks, int64_t num_of_bytes)

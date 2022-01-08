@@ -7,10 +7,7 @@
 
 namespace renpy
 {
-    struct ArchiveItem : kriabal::Item
-    {
-        std::string prefix_bytes;
-    };
+    struct ArchiveItem : kriabal::Item {};
 
     class Archive : public kriabal::Tome
     {
@@ -20,7 +17,6 @@ namespace renpy
     private:
         static void UncompressZlibStream(std::string& input_buffer, std::string& output_buffer);
         void ParsePythonIndex(std::string& input_buffer, int64_t encryption_key);
-        size_t ExtractItemHeader(const kriabal::Item& item, kriabal::stream::FileStream& output_stream);
     };
 }
 

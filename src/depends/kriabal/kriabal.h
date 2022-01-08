@@ -20,6 +20,7 @@ namespace kriabal
         int64_t offset;
         int64_t size_in_bytes;
         std::string path;
+        std::string header;
     };
 
     class Tome
@@ -37,7 +38,6 @@ namespace kriabal
         void SkipSignature();
         void ReserveItems(int64_t count);
         void PushItem(std::unique_ptr<Item> item);
-        virtual size_t ExtractItemHeader(const Item& item, stream::FileStream& output_stream);
 
         static void Assert(bool condition);
     private:

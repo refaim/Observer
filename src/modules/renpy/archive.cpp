@@ -123,19 +123,11 @@ namespace renpy
                 {
                     auto prefix_raw_bytes = PyBytes_AsString(python::RawPtr(ref_prefix_bytes_ansi));
                     Assert(prefix_raw_bytes != nullptr);
-                    item->prefix_bytes.assign(prefix_raw_bytes);
+                    item->header.assign(prefix_raw_bytes);
                 }
             }
 
             PushItem(std::move(item));
         }
-    }
-
-    size_t Archive::ExtractItemHeader(const kriabal::Item& item, kriabal::stream::FileStream& output_stream)
-    {
-        auto renpy_item = static_cast<const ArchiveItem&>(item);
-        if (renpy_item.prefix_bytes.empty()) return 0;
-        output_stream.WriteBytes(renpy_item.prefix_bytes, renpy_item.prefix_bytes.size());
-        return renpy_item.prefix_bytes.size();
     }
 }

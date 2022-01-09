@@ -1,3 +1,5 @@
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL_v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+
 **This is a fork of https://github.com/lazyhamster/Observer. This fork was created to develop additional modules (RenPy, Zanzarah).**
 
 # Observer

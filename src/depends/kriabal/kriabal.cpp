@@ -6,8 +6,6 @@
 #include <algorithm>
 #include <boost/numeric/conversion/cast.hpp>
 
-#include "ModuleCRT.h"
-
 namespace kriabal
 {
     void CopyString(std::wstring source, wchar_t* destination, int32_t max_len)
@@ -16,13 +14,29 @@ namespace kriabal
             throw RuntimeError();
     }
 
-    void Tome::Open(StorageOpenParams params, StorageGeneralInfo* info)
+    bool SignatureMatchOrNull(const void* buffer, size_t buffer_size, const std::vector<unsigned char>& signature)
     {
-        if (!SignatureMatchOrNull(params.Data, params.DataSize, signature_.data()))
+        if (buffer == nullptr) return true;
+        if (signature.size() > buffer_size) return false;
+
+        auto char_buffer = reinterpret_cast<const unsigned char*>(buffer);
+        for (auto i = 0; i < signature.size(); ++i)
+            if (signature[i] != char_buffer[i])
+                return false;
+
+        return true;
+    }
+
+    void Tome::Open(StorageOpenParams params)
+    {
+        if (!SignatureMatchOrNull(params.Data, params.DataSize, signature_))
             throw RuntimeError();
 
         stream_ = std::make_unique<stream::FileStream>(params.FilePath, true, false);
+    }
 
+    void Tome::FillGeneralInfo(StorageGeneralInfo* info)
+    {
         std::memset(info, 0, sizeof(StorageGeneralInfo));
         CopyString(format_, info->Format, STORAGE_FORMAT_NAME_MAX_LEN);
         CopyString(L"-", info->Compression, STORAGE_PARAM_MAX_LEN);
@@ -33,7 +47,7 @@ namespace kriabal
     {
         if (index < 0) throw RuntimeError();
         if (boost::numeric_cast<size_t>(index) >= items_.size()) throw ItemIndexTooLargeError();
-        return *items_.at(index).get();
+        return *items_[index].get();
     }
 
     void Tome::FillItemInfo(const Item& item, StorageItemInfo* output)

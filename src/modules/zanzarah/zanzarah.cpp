@@ -9,7 +9,7 @@
 
 int MODULE_EXPORT OpenStorage(StorageOpenParams params, HANDLE* storage, StorageGeneralInfo* info) //-V813
 {
-    auto archive = new renpy::Archive();
+    auto archive = new zanzarah::Archive();
     try
     {
         archive->Open(params);
@@ -28,7 +28,7 @@ void MODULE_EXPORT CloseStorage(HANDLE storage)
 {
     if (storage == nullptr) return;
 
-    auto archive = static_cast<renpy::Archive*>(storage);
+    auto archive = static_cast<zanzarah::Archive*>(storage);
     delete archive;
 }
 
@@ -36,7 +36,7 @@ int MODULE_EXPORT PrepareFiles(HANDLE storage)
 {
     if (storage == nullptr) return FALSE;
 
-    auto archive = static_cast<renpy::Archive*>(storage);
+    auto archive = static_cast<zanzarah::Archive*>(storage);
     try
     {
         archive->PrepareItems();
@@ -52,7 +52,7 @@ int MODULE_EXPORT GetStorageItem(HANDLE storage, int item_index, StorageItemInfo
 {
     if (storage == nullptr) return GET_ITEM_ERROR;
 
-    auto archive = static_cast<renpy::Archive*>(storage);
+    auto archive = static_cast<zanzarah::Archive*>(storage);
     try
     {
         archive->FillItemInfo(archive->GetItem(item_index), item_info);
@@ -72,7 +72,7 @@ int MODULE_EXPORT ExtractItem(HANDLE storage, ExtractOperationParams params) //-
 {
     if (storage == nullptr) return SER_ERROR_SYSTEM;
 
-    auto archive = static_cast<renpy::Archive*>(storage);
+    auto archive = static_cast<zanzarah::Archive*>(storage);
     try
     {
         archive->ExtractItem(archive->GetItem(params.ItemIndex), params);
@@ -104,21 +104,21 @@ int MODULE_EXPORT ExtractItem(HANDLE storage, ExtractOperationParams params) //-
 // Exported Functions
 //////////////////////////////////////////////////////////////////////////
 
-// {9486718F-8F0A-4DE7-9880-01146B336D6B}
-static const GUID MODULE_GUID = { 0x9486718f, 0x8f0a, 0x4de7, { 0x98, 0x80, 0x01, 0x14, 0x6b, 0x33, 0x6d, 0x6b } };
+// {86E7E4C3-BC44-4E8E-90AF-BDBD1CB61A83}
+static const GUID MODULE_GUID = { 0x86e7e4c3, 0xbc44, 0x4e8e, { 0x90, 0xaf, 0xbd, 0xbd, 0x1c, 0xb6, 0x1a, 0x83 } };
 
 int MODULE_EXPORT LoadSubModule(ModuleLoadParameters* LoadParams)
 {
     LoadParams->ModuleId = MODULE_GUID;
-    LoadParams->ModuleVersion = MAKEMODULEVERSION(2, 0);
-    LoadParams->ApiVersion = ACTUAL_API_VERSION;
-    LoadParams->ApiFuncs.OpenStorage = OpenStorage;
-    LoadParams->ApiFuncs.CloseStorage = CloseStorage;
-    LoadParams->ApiFuncs.GetItem = GetStorageItem;
-    LoadParams->ApiFuncs.ExtractItem = ExtractItem;
-    LoadParams->ApiFuncs.PrepareFiles = PrepareFiles;
+	LoadParams->ModuleVersion = MAKEMODULEVERSION(1, 0);
+	LoadParams->ApiVersion = ACTUAL_API_VERSION;
+	LoadParams->ApiFuncs.OpenStorage = OpenStorage;
+	LoadParams->ApiFuncs.CloseStorage = CloseStorage;
+	LoadParams->ApiFuncs.GetItem = GetStorageItem;
+	LoadParams->ApiFuncs.ExtractItem = ExtractItem;
+	LoadParams->ApiFuncs.PrepareFiles = PrepareFiles;
 
-    return TRUE;
+	return TRUE;
 }
 
 void MODULE_EXPORT UnloadSubModule()

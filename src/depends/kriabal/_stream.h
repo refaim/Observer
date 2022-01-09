@@ -19,6 +19,7 @@ namespace kriabal::stream
     class NumberReadError : public RuntimeError {};
     class NumberReadNotANumberError : public RuntimeError {};
     class NumberReadNotAPositiveNumberError : public RuntimeError {};
+    class NumberReadNotAPositiveOrZeroNumberError : public RuntimeError {};
     class NumberReadOverflowError : public RuntimeError {};
     class NumberReadUnderflowError : public RuntimeError {};
 
@@ -26,11 +27,14 @@ namespace kriabal::stream
     {
     public:
         FileStream(std::wstring path, bool read_only, bool create_if_not_exists);
+        int64_t GetPosition();
         int64_t GetFileSizeInBytes();
         void Seek(int64_t position);
         void Skip(int64_t num_of_bytes);
         void ReadBytes(std::string& buffer, size_t num_of_bytes);
         void WriteBytes(const std::string& buffer, size_t num_of_bytes);
+        int32_t ReadSignedPositiveInt32FromBytes();
+        int32_t ReadSignedPositiveOrZeroInt32FromBytes();
         int64_t ReadSignedPositiveInt64FromHexString();
     private:
         std::unique_ptr<CFileStream> stream_;

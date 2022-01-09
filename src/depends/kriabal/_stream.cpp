@@ -12,6 +12,11 @@ namespace kriabal::stream
             throw RuntimeError();
     }
 
+    int64_t FileStream::GetPosition()
+    {
+        return stream_->GetPos();
+    }
+
     int64_t FileStream::GetFileSizeInBytes()
     {
         return stream_->GetSize();
@@ -47,13 +52,33 @@ namespace kriabal::stream
             throw WriteError();
     }
 
+    int32_t FileStream::ReadSignedPositiveInt32FromBytes()
+    {
+        int32_t result = ReadSignedPositiveOrZeroInt32FromBytes();
+
+        if (result == 0)
+            throw NumberReadNotAPositiveNumberError();
+
+        return result;
+    }
+
+    int32_t FileStream::ReadSignedPositiveOrZeroInt32FromBytes()
+    {
+        unsigned char buffer[4];
+        if (!stream_->ReadBuffer(&buffer, 4))
+            throw ReadError();
+
+        int32_t result = buffer[0] | (buffer[1] << 8) | (buffer[2] << 16) | (buffer[3] << 24);
+        if (result < 0)
+            throw NumberReadNotAPositiveOrZeroNumberError();
+
+        return result;
+    }
+
     int64_t FileStream::ReadSignedPositiveInt64FromHexString()
     {
-        const size_t kBufferSize = sizeof(int64_t) * 2;
-
-        std::string buffer(kBufferSize, '\0');
-        if (!stream_->ReadBuffer(buffer.data(), kBufferSize))
-            throw ReadError();
+        std::string buffer(sizeof(int64_t) * 2, '\0');
+        ReadBytes(buffer, buffer.size());
 
         char* dummy;
         int64_t result = std::strtoll(buffer.c_str(), &dummy, 16);

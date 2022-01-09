@@ -69,6 +69,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "renpy", "modules\renpy\renp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kriabal", "depends\kriabal\kriabal.vcxproj", "{B2EED9A5-EA4B-412E-9B14-02FD20449E6C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zanzarah", "modules\zanzarah\zanzarah.vcxproj", "{2A8F2860-DFBF-45DC-9259-564C6B86EE69}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug-Far3|Win32 = Debug-Far3|Win32
@@ -569,6 +571,22 @@ Global
 		{B2EED9A5-EA4B-412E-9B14-02FD20449E6C}.Release-Unicode|Win32.Build.0 = Release-Unicode|Win32
 		{B2EED9A5-EA4B-412E-9B14-02FD20449E6C}.Release-Unicode|x64.ActiveCfg = Release-Unicode|x64
 		{B2EED9A5-EA4B-412E-9B14-02FD20449E6C}.Release-Unicode|x64.Build.0 = Release-Unicode|x64
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Debug-Far3|Win32.ActiveCfg = Debug-Far3|Win32
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Debug-Far3|Win32.Build.0 = Debug-Far3|Win32
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Debug-Far3|x64.ActiveCfg = Debug-Far3|x64
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Debug-Far3|x64.Build.0 = Debug-Far3|x64
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Debug-Unicode|Win32.ActiveCfg = Debug-Unicode|Win32
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Debug-Unicode|Win32.Build.0 = Debug-Unicode|Win32
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Debug-Unicode|x64.ActiveCfg = Debug-Unicode|x64
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Debug-Unicode|x64.Build.0 = Debug-Unicode|x64
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Release-Far3|Win32.ActiveCfg = Release-Far3|Win32
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Release-Far3|Win32.Build.0 = Release-Far3|Win32
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Release-Far3|x64.ActiveCfg = Release-Far3|x64
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Release-Far3|x64.Build.0 = Release-Far3|x64
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Release-Unicode|Win32.ActiveCfg = Release-Unicode|Win32
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Release-Unicode|Win32.Build.0 = Release-Unicode|Win32
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Release-Unicode|x64.ActiveCfg = Release-Unicode|x64
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69}.Release-Unicode|x64.Build.0 = Release-Unicode|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -604,6 +622,7 @@ Global
 		{A1980AF2-B80C-41D9-9AC8-4B19275CD81D} = {DFAD269E-8C1B-4D43-9B97-E24CF06EECE1}
 		{4CB07DB2-A503-43EC-BD58-C3648977A218} = {1BABDE8B-21F8-4A33-8564-9472D997F3D6}
 		{B2EED9A5-EA4B-412E-9B14-02FD20449E6C} = {DFAD269E-8C1B-4D43-9B97-E24CF06EECE1}
+		{2A8F2860-DFBF-45DC-9259-564C6B86EE69} = {1BABDE8B-21F8-4A33-8564-9472D997F3D6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9794F25A-F173-4E96-A344-6D2E9CFE85A9}

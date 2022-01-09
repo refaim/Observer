@@ -26,8 +26,10 @@ namespace kriabal
     class Tome
     {
     public:
-        Tome(std::wstring format, std::string signature) : format_(format), signature_(signature) {};
-        void Open(StorageOpenParams params, StorageGeneralInfo* info);
+        Tome(std::wstring format, std::string signature) : format_(format), signature_(signature.begin(), signature.end()) {};
+        Tome(std::wstring format, std::vector<unsigned char> signature) : format_(format), signature_(signature) {};
+        virtual void Open(StorageOpenParams params);
+        void FillGeneralInfo(StorageGeneralInfo* info);
         virtual void PrepareItems() = 0;
         const Item& GetItem(int64_t index) const;
         void FillItemInfo(const Item& item, StorageItemInfo* output);
@@ -42,7 +44,7 @@ namespace kriabal
         static void Assert(bool condition);
     private:
         std::wstring format_;
-        std::string signature_;
+        std::vector<unsigned char> signature_;
         std::vector<std::unique_ptr<Item>> items_;
 
         void ReportExtractionProgress(const ExtractProcessCallbacks& callbacks, int64_t num_of_bytes);

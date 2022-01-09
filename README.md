@@ -45,9 +45,9 @@ Observer is [free](http://www.gnu.org/philosophy/free-sw.html) software: you can
 [Support Forum (in Russian)](https://forum.farmanager.com/viewtopic.php?f=5&t=4644)
 
 ## Credits
-The modules are based on (or inspired by) the following sources:
+The modules are inspired by the following sources:
 - RenPy: [rpatool](https://github.com/Shizmob/rpatool) by [Shizmob](https://github.com/Shizmob)
-- Zanzarah: [zanzapak](http://aluigi.altervista.org/papers.htm#others-file) by [Luigi Auriemma](http://aluigi.altervista.org)
+- Zanzarah: [zanzapak](http://aluigi.altervista.org/papers.htm#others-file) by [Luigi Auriemma](http://aluigi.altervista.org) and [IKS Tools](https://github.com/bartlomiejduda/Tools/tree/master/OLD%20Python%20Tools/IKS%20ZANZARAH%20TOOLS) by [bartlomiejduda](https://github.com/bartlomiejduda)
 
 ## How to build from source
 Project is developed under MS Visual Studio 2017.

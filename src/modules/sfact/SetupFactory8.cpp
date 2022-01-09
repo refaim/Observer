@@ -11,8 +11,6 @@ const uint8_t SIGNATURE[SIGNATURE_SIZE] = {0xe0,0xe0,0xe1,0xe1,0xe2,0xe2,0xe3,0x
 #define FILENAME_EMBEDDED_INSTALLER "irsetup.exe"
 #define FILENAME_LUA_DLL "lua5.1.dll"
 
-#define STRBUF_SIZE(x) ( sizeof(x) / sizeof(x[0]) )
-
 static bool GetVersionFromManifest(const char* manifest, int *major, int *minor)
 {
 	const char* identStart = strstr(manifest, "<assemblyIdentity");
@@ -31,6 +29,53 @@ static bool GetVersionFromManifest(const char* manifest, int *major, int *minor)
 
 	return false;
 }
+
+struct LANGANDCODEPAGE
+{
+	WORD wLanguage;
+	WORD wCodePage;
+};
+
+static bool GetVersionInfoData(const wchar_t* exePath, int& major, int &minor, std::wstring& productName)
+{
+	DWORD dwHandle = 0;
+	void* ptrData = nullptr;
+	UINT nDataSize = 0;
+
+	DWORD dwSize = GetFileVersionInfoSize(exePath, &dwHandle);
+	if (dwSize > 0)
+	{
+		void* ptrBlock = malloc(dwSize);
+		if (GetFileVersionInfo(exePath, dwHandle, dwSize, ptrBlock))
+		{
+			if (VerQueryValue(ptrBlock, L"\\", &ptrData, &nDataSize))
+			{
+				VS_FIXEDFILEINFO *verInfo = (VS_FIXEDFILEINFO*)ptrData;
+				if (verInfo->dwSignature == 0xfeef04bd)
+				{
+					major = (verInfo->dwFileVersionMS >> 16) & 0xffff;
+					minor = (verInfo->dwFileVersionMS >> 0) & 0xffff;
+				}
+			}
+
+			if (VerQueryValue(ptrBlock, L"\\VarFileInfo\\Translation", &ptrData, &nDataSize) && (nDataSize > 0))
+			{
+				LANGANDCODEPAGE *ptrTranslate = (LANGANDCODEPAGE*)ptrData;
+
+				wchar_t wszSubBlock[128] = { 0 };
+				swprintf_s(wszSubBlock, _countof(wszSubBlock), L"\\StringFileInfo\\%04x%04x\\ProductName", ptrTranslate->wLanguage, ptrTranslate->wCodePage);
+
+				VerQueryValue(ptrBlock, wszSubBlock, &ptrData, &nDataSize);
+				productName = (wchar_t*) ptrData;
+			}
+		}
+		free(ptrBlock);
+		return true;
+	}
+	return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
 
 SetupFactory8::SetupFactory8( void )
 {
@@ -75,6 +120,18 @@ bool SetupFactory8::Open( CFileStream* inFile )
 		return GetVersionFromManifest(manifestText.c_str(), &m_nVersion, &m_nMinorVersion) && (m_nVersion == 9);
 	}
 
+	// Some files have bogus manifest. Let's try VersionInfo data for them
+	if (manifestText.find("<description>Setup</description>") != std::string::npos)
+	{
+		std::wstring productName;
+		if (GetVersionInfoData(inFile->FilePath(), m_nVersion, m_nMinorVersion, productName) && (m_nVersion == 9) && (productName == L"Setup Factory Runtime"))
+		{
+			m_pInFile = inFile;
+			m_nStartOffset = inFile->GetPos();
+			return true;
+		}
+	}
+
 	return false;
 }
 
@@ -112,7 +169,7 @@ int SetupFactory8::EnumFiles()
 		m_pInFile->Seek(4, STREAM_CURRENT);
 
 		SFFileEntry fe;
-		strcpy_s(fe.LocalPath, STRBUF_SIZE(fe.LocalPath), nameBuf);
+		fe.LocalPath = nameBuf;
 		fe.PackedSize = fileSize;
 		fe.CRC = fileCrc;
 		fe.DataOffset = m_pInFile->GetPos();
@@ -268,13 +325,7 @@ int SetupFactory8::ParseScript( int64_t baseOffset )
 		fe.Attributes = useOrigAttr ? origAttr : forcedAttr;
 		fe.LastWriteTime = modTime;
 		fe.CreationTime = createTime;
-
-		strcpy_s(fe.LocalPath, MAX_PATH, strDestDir);
-		if (strDestDir[0] && (strDestDir[strlen(strDestDir)-1] != '\\'))
-		{
-			strcat_s(fe.LocalPath, MAX_PATH, "\\");
-		}
-		strcat_s(fe.LocalPath, MAX_PATH, strBaseName);
+		fe.LocalPath = JoinLocalPath(strDestDir, strBaseName);
 		
 		m_vFiles.push_back(fe);
 		nextOffset += nCompSize;
@@ -290,7 +341,7 @@ bool SetupFactory8::ReadSpecialFile( const char* fileName, bool isXORed )
 	m_pInFile->ReadBuffer(&fileSize, sizeof(fileSize));
 
 	SFFileEntry fe;
-	strcpy_s(fe.LocalPath, STRBUF_SIZE(fe.LocalPath), fileName);
+	fe.LocalPath = fileName;
 	fe.PackedSize = fileSize;
 	fe.UnpackedSize = fileSize;
 	fe.Compression = COMP_NONE;

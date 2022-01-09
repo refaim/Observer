@@ -1,15 +1,9 @@
 version: 1.0.{build}
 
-branches:
-  only:
-    - develop
-
 image: Visual Studio 2017
 
 shallow_clone: true
 clone_depth: 1
-
-skip_tags: true
 
 configuration:
   - Release-Far3
@@ -42,6 +36,8 @@ install:
   - vcpkg install zlib:%P_ARCH%-windows
   - vcpkg install bzip2:%P_ARCH%-windows
   - vcpkg install glib:%P_ARCH%-windows
+  - vcpkg install libmspack:%P_ARCH%-windows
+  - vcpkg install gmime:%P_ARCH%-windows
   - vcpkg install boost-iostreams:%P_ARCH%-windows
   - cd %APPVEYOR_BUILD_FOLDER%
 
@@ -68,18 +64,17 @@ after_build:
 
 artifacts:
   - path: '*.7z'
+    name: distr
 
 deploy:
-  - provider: BinTray
+  - provider: GitHub
+    tag: $(APPVEYOR_REPO_TAG_NAME)
+    release: $(PVER)
+    description: 'Stable Release'
+    auth_token:
+      secure: yydJ7NhXUmWzitSCv7CA8LvEW7/4KGABG11kPMhDmyGGyHAVQuOLTCOqxkI+vl1x
+    artifact: distr
+    draft: true
+    prerelease: false
     on:
-      branch: master
-    username: refaim
-    api_key:
-      secure: pKZQ3ll3GRbdHxfi43xCiI2jcAII11t/N7/BDuo2OC/vDjLmER21SmEeu9s6Peu3
-    subject: refaim
-    repo: Observer
-    package: Observer
-    version: $(PVER)
-    publish: true
-    override: true
-    explode: false
+      APPVEYOR_REPO_TAG: true        # deploy on tag push only

@@ -175,10 +175,10 @@ static void ReportFailedModules(const std::vector<FailedModuleInfo> &failedModul
 		listIndex += 2;
 	}
 
-	PluginDialogBuilder Builder(FarSInfo, OBSERVER_GUID, GUID_OBS_LOAD_ERROR, L"Loading Error", nullptr, nullptr, nullptr, FDLG_WARNING);
+	PluginDialogBuilder Builder(FarSInfo, OBSERVER_GUID, GUID_OBS_LOAD_ERROR, GetLocMsg(MSG_PLUGIN_NAME), nullptr, nullptr, nullptr, FDLG_WARNING);
 
 	Builder.AddText(L"Some modules failed to load");
-	Builder.AddListBox(nullptr, 50, 10, boxList, boxListSize, DIF_LISTNOBOX | DIF_LISTNOCLOSE);
+	Builder.AddListBox(nullptr, 60, 10, boxList, boxListSize, DIF_LISTNOBOX | DIF_LISTNOCLOSE);
 	Builder.AddOKCancel(MSG_BTN_OK, -1, -1, true);
 
 	Builder.ShowDialog();
@@ -193,16 +193,34 @@ static std::wstring FileSizeToString(int64_t fileSize, bool keepBytes)
 	return tmpBuf;
 }
 
+static std::wstring ShortenPath(const std::wstring &path, size_t maxWidth)
+{
+	if (path.length() > maxWidth)
+	{
+		wchar_t* tmpBuf = _wcsdup(path.c_str());
+		if (tmpBuf)
+		{
+			FSF.TruncPathStr(tmpBuf, maxWidth);
+
+			std::wstring result(tmpBuf);
+			free(tmpBuf);
+			return result;
+		}
+	}
+
+	return path;
+}
+
 static void AddAttrLine(PluginDialogBuilder& Builder, const wchar_t* labelText, const wchar_t* valueText)
 {
-	const int cnLabelWidth = 16;
+	const int cnLabelWidth = 18;
 	
-	auto dlgItem = Builder.AddReadonlyEditField(valueText, 36);
-	auto x1 = dlgItem->X1;
-	auto x2 = dlgItem->X2;
-	Builder.AddTextBefore(dlgItem, labelText);
-	dlgItem->X1 = x1 + cnLabelWidth;
-	dlgItem->X2 = x2 + cnLabelWidth;
+	auto dlgValueField = Builder.AddReadonlyEditField(valueText, 40);
+	auto x1 = dlgValueField->X1;
+	auto x2 = dlgValueField->X2;
+	Builder.AddTextBefore(dlgValueField, labelText);
+	dlgValueField->X1 = x1 + cnLabelWidth;
+	dlgValueField->X2 = x2 + cnLabelWidth;
 }
 
 static std::wstring FormatNodeSize(__int64 sizeVal)
@@ -258,24 +276,26 @@ static void ShowAttributes(const ContentTreeNode* node)
 	std::wstring strCreateTime = FileTimeToString(node->CreationTime);
 	std::wstring strPath = node->GetPath();
 
-	PluginDialogBuilder Builder(FarSInfo, OBSERVER_GUID, GUID_OBS_OTHER_DIALOG, L"Properties", nullptr, AttrDlgProc);
+	auto strTruncName = ShortenPath(node->Name(), 50);
 
-	Builder.AddText(node->Name())->Flags |= DIF_CENTERTEXT;
+	PluginDialogBuilder Builder(FarSInfo, OBSERVER_GUID, GUID_OBS_OTHER_DIALOG, GetLocMsg(MSG_PROPS_HEADER), nullptr, AttrDlgProc);
+
+	Builder.AddText(strTruncName.c_str())->Flags |= DIF_CENTERTEXT;
 	Builder.AddSeparator();
 
-	AddAttrLine(Builder, L"Path", strPath.c_str());
+	AddAttrLine(Builder, GetLocMsg(MSG_PROPS_PATH), strPath.c_str());
 	if (!node->IsDir())
 	{
-		AddAttrLine(Builder, L"Size", strNodeSize.c_str());
-		AddAttrLine(Builder, L"Packed Size", strNodePackedSize.c_str());
+		AddAttrLine(Builder, GetLocMsg(MSG_PROPS_SIZE), strNodeSize.c_str());
+		AddAttrLine(Builder, GetLocMsg(MSG_PROPS_PACKEDSIZE), strNodePackedSize.c_str());
 		if (node->GetNumberOfHardLinks() > 0)
 		{
-			AddAttrLine(Builder, L"Hardlinks", strNodeHardLinks.c_str());
+			AddAttrLine(Builder, GetLocMsg(MSG_PROPS_HARDLINKS), strNodeHardLinks.c_str());
 		}
 	}
-	AddAttrLine(Builder, L"Created", strCreateTime.c_str());
-	AddAttrLine(Builder, L"Modified", strModTime.c_str());
-	AddAttrLine(Builder, L"Owner", node->GetOwner());
+	AddAttrLine(Builder, GetLocMsg(MSG_PROPS_CREATETIME), strCreateTime.c_str());
+	AddAttrLine(Builder, GetLocMsg(MSG_PROPS_MODIFYTIME), strModTime.c_str());
+	AddAttrLine(Builder, GetLocMsg(MSG_PROPS_OWNER), node->GetOwner());
 
 	int isReadOnly = node->GetAttributes() & FILE_ATTRIBUTE_READONLY;
 	int isHidden = node->GetAttributes() & FILE_ATTRIBUTE_HIDDEN;
@@ -333,14 +353,14 @@ static StorageObject* OpenStorage(const std::wstring& Name, bool applyExtFilters
 	FarSInfo.AdvControl(&OBSERVER_GUID, ACTL_SETPROGRESSSTATE, TBPS_INDETERMINATE, NULL);
 
 	StorageObject* hResult = nullptr;
-	bool listAborted;
-	if (storage->ReadFileList(listAborted))
+	ListReadResult listRet = storage->ReadFileList();
+	if (listRet == ListReadResult::Ok)
 	{
 		hResult = storage;
 	}
 	else
 	{
-		if (!listAborted)
+		if (listRet == ListReadResult::ItemError)
 			DisplayMessage(true, true, MSG_OPEN_CONTENT_ERROR, MSG_OPEN_INVALID_ITEM, NULL);
 		delete storage;
 	}
@@ -407,24 +427,6 @@ static bool GetSelectedPanelFilePath(std::wstring& nameStr)
 		}
 	
 	return !nameStr.empty();
-}
-
-static std::wstring ShortenPath(const std::wstring &path, size_t maxWidth)
-{
-	if (path.length() > maxWidth)
-	{
-		wchar_t* tmpBuf = _wcsdup(path.c_str());
-		if (tmpBuf)
-		{
-			FSF.TruncPathStr(tmpBuf, maxWidth);
-
-			std::wstring result(tmpBuf);
-			free(tmpBuf);
-			return result;
-		}
-	}
-
-	return path;
 }
 
 //-----------------------------------  Callback functions ----------------------------------------
@@ -772,7 +774,7 @@ static bool ItemSortPred(ContentTreeNode* item1, ContentTreeNode* item2)
 int BatchExtract(StorageObject* info, ContentNodeList &items, __int64 totalExtractSize, ExtractSelectedParams &extParams)
 {
 	// Items should be sorted (e.g. for access to solid archives)
-	sort(items.begin(), items.end(), ItemSortPred);
+	std::sort(items.begin(), items.end(), ItemSortPred);
 
 	if (!ForceDirectoryExist(extParams.strDestPath))
 	{
@@ -1048,10 +1050,8 @@ HANDLE WINAPI OpenW(const struct OpenInfo *OInfo)
 				return nullptr;
 			else if (nMItem == 1) // Show modules selection dialog
 			{
-				int nSelectedModItem = SelectModuleToOpenFileAs();
-				if (nSelectedModItem >= 0)
-					nOpenModuleIndex = nSelectedModItem;
-				else
+				nOpenModuleIndex = SelectModuleToOpenFileAs();
+				if (nOpenModuleIndex < 0)
 					return nullptr;
 			}
 		}

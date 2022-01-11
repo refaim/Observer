@@ -26,6 +26,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.4.0
 
+      - name: Install m4
+        uses: msys2/setup-msys2@v2
+        with:
+          install: m4
+      - name: Add m4 to PATH
+        run: |
+          New-Item -ItemType Directory $env:RUNNER_TEMP/bin
+          Copy-Item "D:\a\_temp\msys64\usr\bin\m4.exe" -Destination "$env:RUNNER_TEMP/bin"
+          echo "$env:RUNNER_TEMP/bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1.1
 

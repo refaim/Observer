@@ -51,3 +51,17 @@ jobs:
           /p:Platform=${{ matrix.solution-platform }}
           /p:VcpkgTriplet=${{ matrix.architecture }}-windows
           /p:VcpkgConfiguration=${{ matrix.build-type }}
+          /p:RunCodeAnalysis=true
+
+      - name: Collect Code Analysis output
+        run: |
+          New-Item -Path $env:GITHUB_WORKSPACE -Name sarif_files -ItemType Directory
+          $files = Get-ChildItem -Recurse -File -Name -Filter *.sarif
+          foreach ($file in $files) {
+            Copy-Item $file -Destination sarif_files
+          }
+
+      - name: Upload SARIF files
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: sarif_files

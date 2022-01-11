@@ -13,3 +13,6 @@ ipch/
 *.suo
 *.VC.db
 *.VC.opendb
+
+# vcpkg
+/vcpkg_installed

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "observer",
+  "version": "1.12.1",
+  "dependencies": [
+    "boost-numeric-conversion",
+    "python3",
+    "zlib"
+  ],
+  "overrides": [
+    { "name": "python3", "version": "3.7.3-3" }
+  ],
+  "builtin-baseline": "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
+}

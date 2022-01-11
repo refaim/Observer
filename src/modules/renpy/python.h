@@ -4,7 +4,7 @@
 #include <exception>
 #include <memory>
 
-#include <Python.h>
+#include <python3.7\Python.h>
 
 namespace renpy::python
 {

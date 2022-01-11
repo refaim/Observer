@@ -47,7 +47,4 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <CopyFileToFolders Include="C:\Python37-x64\python37_d.dll" />
-  </ItemGroup>
 </Project>

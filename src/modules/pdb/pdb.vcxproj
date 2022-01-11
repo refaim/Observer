@@ -187,6 +187,9 @@
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release-Far3|x64'">$(VSInstallDir)DIA SDK\include;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release-Unicode|x64'">$(VSInstallDir)DIA SDK\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Unicode|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>

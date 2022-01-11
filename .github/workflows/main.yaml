@@ -1,0 +1,53 @@
+name: Continuous Integration
+
+on: [push, pull_request]
+
+jobs:
+  job:
+    name: ${{ matrix.module }}-${{ matrix.far-version }}-${{ matrix.architecture }}-${{ matrix.build-type }}
+    runs-on: windows-2016
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [RenPy, Zanzarah]
+        far-version: [Far2, Far3]
+        architecture: [x86, x64]
+        build-type: [Debug, Release]
+        include:
+          - far-version: Far2
+            solution-configuration: Unicode
+          - far-version: Far3
+            solution-configuration: Far3
+          - architecture: x86
+            solution-platform: Win32
+          - architecture: x64
+            solution-platform: x64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Integrate vcpkg
+        run: |
+          Move-Item -Force -Path vcpkg-ci.json -Destination vcpkg.json
+          vcpkg integrate install
+
+      - name: Cache vcpkg dependencies
+        uses: actions/cache@v2.1.7
+        with:
+          path: |
+            vcpkg_installed
+            ~\AppData\Local\vcpkg\archives
+          key: vcpkg-${{ matrix.architecture }}-${{ matrix.build-type }}-${{ hashFiles('vcpkg.json') }}-2
+          restore-keys: |
+            vcpkg-${{ matrix.architecture }}-${{ matrix.build-type }}-
+
+      - name: Build project
+        run: >
+          msbuild $env:GITHUB_WORKSPACE\src\modules\${{ matrix.module }}\${{ matrix.module }}.vcxproj
+          /p:Configuration=${{ matrix.build-type }}-${{ matrix.solution-configuration }}
+          /p:Platform=${{ matrix.solution-platform }}
+          /p:VcpkgTriplet=${{ matrix.architecture }}-windows
+          /p:VcpkgConfiguration=${{ matrix.build-type }}

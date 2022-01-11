@@ -1,6 +1,7 @@
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL_v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+[![Continuous Integration](https://github.com/refaim/Observer/actions/workflows/main.yaml/badge.svg)](https://github.com/refaim/Observer/actions/workflows/main.yaml)
 
-**This is a fork of https://github.com/lazyhamster/Observer. This fork was created to develop additional modules (RenPy, Zanzarah).**
+**This repository is a fork of https://github.com/lazyhamster/Observer. It was created to develop additional modules (see credits).**
 
 # Observer
 Compound plugin for [Far Manager](https://www.farmanager.com) 2.0/3.0 that allows users to browse various file containers and extract content from them.
@@ -55,14 +56,8 @@ The modules are inspired by the following sources:
 Project is developed under MS Visual Studio 2017.
 
 Observer modules depend on several libraries that are not supplied with sources.
-The easiest way to use these libraries is with [vcpkg](https://github.com/Microsoft/vcpkg) tool.
-
-For x86 version run:
-* vcpkg install zlib bzip2 glib gmime libmspack --triplet x86-windows
-
-For x64 version run:
-* vcpkg install zlib bzip2 glib gmime libmspack --triplet x64-windows
+Observer uses [vcpkg Manifest Mode MSBuild Integration](https://vcpkg.readthedocs.io/en/latest/users/manifests/#msbuild-integration).
+All additional libraries will be installed according to `vcpkg.json` manifest file the first time you build the project.
 
 ### Additional requirements
-* Boost C++ Libraries.
-* M4 Macro Processor (must be in %PATH%).
+* M4 Macro Processor (must be in %PATH%)

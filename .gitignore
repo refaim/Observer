@@ -1,10 +1,6 @@
 Observer_*.rar
 plug_version.h
 
-# MSVC build folders
-/obj/
-/bin/Release*/
-
 # MSVC files
 ipch/
 .vs/

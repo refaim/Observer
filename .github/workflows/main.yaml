@@ -14,6 +14,10 @@ jobs:
         architecture: [x86, x64]
         build-type: [Debug, Release]
         include:
+          - module: RenPy
+            module-lowercase: renpy
+          - module: Zanzarah
+            module-lowercase: zanzarah
           - far-version: Far2
             solution-configuration: Unicode
           - far-version: Far3
@@ -46,8 +50,19 @@ jobs:
 
       - name: Build project
         run: >
-          msbuild $env:GITHUB_WORKSPACE\src\modules\${{ matrix.module }}\${{ matrix.module }}.vcxproj
+          msbuild $env:GITHUB_WORKSPACE\src\modules\${{ matrix.module-lowercase }}\${{ matrix.module-lowercase }}.vcxproj
+          /p:OutDir=$env:GITHUB_WORKSPACE\bin\
           /p:Configuration=${{ matrix.build-type }}-${{ matrix.solution-configuration }}
           /p:Platform=${{ matrix.solution-platform }}
           /p:VcpkgTriplet=${{ matrix.architecture }}-windows
           /p:VcpkgConfiguration=${{ matrix.build-type }}
+
+      # TODO only for master
+      # TODO add timestamp
+      - name: Upload package
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: ${{ matrix.module }}-${{ matrix.far-version }}-${{ matrix.architecture }}-${{ matrix.build-type }}
+          path: |
+            ${{ github.workspace }}\bin\*.dll
+            ${{ github.workspace }}\bin\*.so

@@ -1,5 +1,5 @@
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL_v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
-[![Continuous Integration](https://github.com/refaim/Observer/actions/workflows/main.yaml/badge.svg?branch=master)](https://github.com/refaim/Observer/actions/workflows/main.yaml)
+[![Continuous Integration](https://github.com/refaim/Observer/actions/workflows/build.yaml/badge.svg?branch=master)](https://github.com/refaim/Observer/actions/workflows/build.yaml)
 
 **This repository is a fork of https://github.com/lazyhamster/Observer. It was created to develop additional modules (see credits).**
 

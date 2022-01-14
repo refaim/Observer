@@ -57,8 +57,6 @@ jobs:
           /p:VcpkgTriplet=${{ matrix.architecture }}-windows
           /p:VcpkgConfiguration=${{ matrix.build-type }}
 
-      # TODO only for master
-      # TODO add timestamp
       - name: Upload package
         uses: actions/upload-artifact@v2.3.1
         with:

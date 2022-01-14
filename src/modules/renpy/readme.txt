@@ -14,3 +14,8 @@ Supported RPA file format versions:
 
 - rpatool (https://github.com/Shizmob/rpatool)
   License: WTFPL
+
+## Contacts
+
+- https://github.com/refaim/Observer
+- rkharito@yandex.ru

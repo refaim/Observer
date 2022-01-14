@@ -42,7 +42,8 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: |
-            vcpkg_installed
+            vcpkg_installed_x86
+            vcpkg_installed_x64
             ~\AppData\Local\vcpkg\archives
           key: vcpkg-${{ matrix.architecture }}-${{ matrix.build-type }}-${{ hashFiles('vcpkg.json') }}-2
           restore-keys: |

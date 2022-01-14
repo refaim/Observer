@@ -11,4 +11,5 @@ ipch/
 *.VC.opendb
 
 # vcpkg
-/vcpkg_installed
+/vcpkg_installed_x86
+/vcpkg_installed_x64

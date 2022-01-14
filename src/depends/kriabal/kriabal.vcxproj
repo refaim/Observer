@@ -176,6 +176,38 @@
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug-Far3|Win32'">
+    <VcpkgTriplet>x86-windows</VcpkgTriplet>
+    <VcpkgInstalledDir>$(VcpkgManifestRoot)\vcpkg_installed_x86</VcpkgInstalledDir>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug-Unicode|Win32'">
+    <VcpkgTriplet>x86-windows</VcpkgTriplet>
+    <VcpkgInstalledDir>$(VcpkgManifestRoot)\vcpkg_installed_x86</VcpkgInstalledDir>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release-Far3|Win32'">
+    <VcpkgTriplet>x86-windows</VcpkgTriplet>
+    <VcpkgInstalledDir>$(VcpkgManifestRoot)\vcpkg_installed_x86</VcpkgInstalledDir>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release-Unicode|Win32'">
+    <VcpkgTriplet>x86-windows</VcpkgTriplet>
+    <VcpkgInstalledDir>$(VcpkgManifestRoot)\vcpkg_installed_x86</VcpkgInstalledDir>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug-Far3|x64'">
+    <VcpkgTriplet>x64-windows</VcpkgTriplet>
+    <VcpkgInstalledDir>$(VcpkgManifestRoot)\vcpkg_installed_x64</VcpkgInstalledDir>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug-Unicode|x64'">
+    <VcpkgTriplet>x64-windows</VcpkgTriplet>
+    <VcpkgInstalledDir>$(VcpkgManifestRoot)\vcpkg_installed_x64</VcpkgInstalledDir>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release-Far3|x64'">
+    <VcpkgTriplet>x64-windows</VcpkgTriplet>
+    <VcpkgInstalledDir>$(VcpkgManifestRoot)\vcpkg_installed_x64</VcpkgInstalledDir>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release-Unicode|x64'">
+    <VcpkgTriplet>x64-windows</VcpkgTriplet>
+    <VcpkgInstalledDir>$(VcpkgManifestRoot)\vcpkg_installed_x64</VcpkgInstalledDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Unicode|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>

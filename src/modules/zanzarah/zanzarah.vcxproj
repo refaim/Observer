@@ -457,6 +457,26 @@
       <Project>{cebdd3f1-0d8a-4d3c-b5a9-1fdf98b8507f}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="readme.txt">
+      <Command>copy /y %(Identity) $(OutDir)\Zanzarah.ReadMe.txt &gt; nul</Command>
+      <Message>Processing %(Identity)</Message>
+      <LinkObjects>false</LinkObjects>
+      <Outputs>$(OutDir)%(Filename)%(Extension)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\..\COPYING">
+      <Command>copy /y %(Identity) $(OutDir)\Zanzarah.License.GPLv3.txt &gt; nul</Command>
+      <Message>Processing %(Identity)</Message>
+      <LinkObjects>false</LinkObjects>
+      <Outputs>$(OutDir)%(Filename)%(Extension)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\..\COPYING.LESSER">
+      <Command>copy /y %(Identity) $(OutDir)\Zanzarah.License.LGPLv3.txt &gt; nul</Command>
+      <Message>Processing %(Identity)</Message>
+      <LinkObjects>false</LinkObjects>
+      <Outputs>$(OutDir)%(Filename)%(Extension)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

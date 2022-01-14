@@ -65,3 +65,5 @@ jobs:
           path: |
             ${{ github.workspace }}\bin\*.dll
             ${{ github.workspace }}\bin\*.so
+            ${{ github.workspace }}\bin\*.txt
+

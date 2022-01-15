@@ -13,6 +13,9 @@
 - Unity
 - RPG Maker
 - Blorb
+- Witcher 1/2/3
+- Disciples 2
+- Bethesda (BSA/BA2)
 
 CI:
 - Попробовать обновиться на windows-2019

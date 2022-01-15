@@ -7,6 +7,10 @@ It adds support of the following formats:
   - Ren'Py Visual Novel Engine archives (RPA)
   - Zanzarah: The Hidden Portal game data (PAK)
 
+## How to install
+
+Download [nigthly build](https://nightly.link/refaim/Observer/workflows/main.yaml/master), follow the instructions inside the archive.
+
 ## How to build from source
 Project is developed under MS Visual Studio 2017.
 

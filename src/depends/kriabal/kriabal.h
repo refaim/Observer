@@ -31,14 +31,14 @@ namespace kriabal
         virtual void Open(StorageOpenParams params);
         void FillGeneralInfo(StorageGeneralInfo* info);
         virtual void PrepareItems() = 0;
-        const Item& GetItem(int64_t index) const;
+        const Item& GetItem(size_t index) const;
         void FillItemInfo(const Item& item, StorageItemInfo* output);
         void ExtractItem(const Item& item, const ExtractOperationParams& params);
     protected:
         std::unique_ptr<stream::FileStream> stream_;
 
         void SkipSignature();
-        void ReserveItems(int64_t count);
+        void ReserveItems(size_t count);
         void PushItem(std::unique_ptr<Item> item);
 
         static void Assert(bool condition);

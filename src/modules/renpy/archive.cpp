@@ -28,7 +28,7 @@ namespace renpy
 
         auto index_raw_bytes = std::make_unique<std::string>();
         {
-            auto index_zlib_bytes = std::make_unique<std::string>(stream_->GetFileSizeInBytes() - index_offset, '\0');
+            auto index_zlib_bytes = std::make_unique<std::string>(boost::numeric_cast<size_t>(stream_->GetFileSizeInBytes() - index_offset), '\0');
 
             stream_->Seek(index_offset);
             stream_->ReadBytes(*index_zlib_bytes.get(), index_zlib_bytes->size());

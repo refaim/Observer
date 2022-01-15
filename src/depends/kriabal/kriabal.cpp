@@ -20,7 +20,7 @@ namespace kriabal
         if (signature.size() > buffer_size) return false;
 
         auto char_buffer = reinterpret_cast<const unsigned char*>(buffer);
-        for (auto i = 0; i < signature.size(); ++i)
+        for (size_t i = 0; i < signature.size(); ++i)
             if (signature[i] != char_buffer[i])
                 return false;
 
@@ -43,7 +43,7 @@ namespace kriabal
         CopyString(L"-", info->Comment, STORAGE_PARAM_MAX_LEN);
     }
 
-    const Item& Tome::GetItem(int64_t index) const
+    const Item& Tome::GetItem(size_t index) const
     {
         if (index < 0) throw RuntimeError();
         if (boost::numeric_cast<size_t>(index) >= items_.size()) throw ItemIndexTooLargeError();
@@ -77,7 +77,7 @@ namespace kriabal
         stream_->Seek(item.offset);
         while (bytes_left > 0)
         {
-            int64_t chunk_length = min(bytes_left, buffer->size());
+            size_t chunk_length = boost::numeric_cast<size_t>(min(bytes_left, buffer->size()));
             stream_->ReadBytes(*buffer.get(), chunk_length);
             output_stream->WriteBytes(*buffer.get(), chunk_length);
 
@@ -97,7 +97,7 @@ namespace kriabal
         stream_->Seek(signature_.size());
     }
 
-    void Tome::ReserveItems(int64_t count)
+    void Tome::ReserveItems(size_t count)
     {
         items_.reserve(count);
     }

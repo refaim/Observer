@@ -13,6 +13,7 @@
     "zlib"
   ],
   "overrides": [
+    { "name": "glib", "version": "2.52.3#27" },
     { "name": "python3", "version": "3.7.3-3" }
   ],
   "builtin-baseline": "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"

@@ -10,12 +10,31 @@ Supported RPA file format versions:
 2. Add "RenPy=modules\renpy.so" to "[Modules]" section of observer.ini
 3. Add "RenPy=*.rpa" to "[Filters]" section of observer.ini    
 
+## License
+
+LGPLv3, see Renpy.License.*.txt files
+
+## Source code
+
+https://github.com/refaim/Observer
+
 ## Used third-party code
 
-- rpatool (https://github.com/Shizmob/rpatool)
+- Boost C++ Libraries (https://www.boost.org)
+  License: BSL
+
+- Observer (https://github.com/lazyhamster/Observer/)
+  License: LGPLv3
+
+- Python (https://www.python.org)
+  License: PSF
+
+- rpatool (https://github.com/Shizmob/rpatool/)
   License: WTFPL
+
+- zlib (https://zlib.net)
+  License: zlib
 
 ## Contacts
 
-- https://github.com/refaim/Observer
-- rkharito@yandex.ru
+rkharito@yandex.ru

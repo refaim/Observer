@@ -8,7 +8,22 @@ This module supports listing and extracting content from "Zanzarah: The Hidden P
 2. Add "Zanzarah=modules\zanzarah.so" to "[Modules]" section of observer.ini
 3. Add "Zanzarah=*.pak" to "[Filters]" section of observer.ini
 
+## License
+
+LGPLv3, see Zanzarah.License.*.txt files
+
+## Source code
+
+https://github.com/refaim/Observer
+
+## Used third-party code
+
+- Boost C++ Libraries (https://www.boost.org)
+  License: BSL
+
+- Observer (https://github.com/lazyhamster/Observer/)
+  License: LGPLv3
+
 ## Contacts
 
-- https://github.com/refaim/Observer
-- rkharito@yandex.ru
+rkharito@yandex.ru

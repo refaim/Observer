@@ -7,10 +7,13 @@
 #include <cstring>
 
 #include <memory>
+#include <sstream>
 #include <utility>
 
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include <zlib.h>
 
 #include "kriabal\kriabal.h"
 
@@ -34,7 +37,8 @@ namespace renpy
         int64_t index_offset = stream_->ReadSignedPositiveInt64FromHexString();
         int64_t encryption_key = stream_->ReadSignedPositiveInt64FromHexString();
 
-        auto index_raw_bytes = std::make_unique<std::string>();
+        // TODO on stack?
+        auto index_raw_bytes = std::make_unique<std::stringstream>(std::ios_base::in | std::ios_base::out | std::ios_base::binary);
         {
             auto index_zlib_bytes = std::make_unique<std::string>(boost::numeric_cast<size_t>(stream_->GetFileSizeInBytes() - index_offset), '\0');
 
@@ -57,8 +61,27 @@ namespace renpy
         }
     }
 
-    void Archive::UncompressZlibStream(std::string& input_buffer, std::string& output_buffer)
+    // TODO move to caller func?
+    void Archive::UncompressZlibStream(std::string& input_buffer, std::stringstream& output_stream)
     {
+        // TODO on heap?
+        // TODO what about copy?
+        // TODO pass from outside?
+        std::stringstream input_stream(input_buffer, std::ios_base::in | std::ios_base::binary);
+
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> filters;
+        filters.push(boost::iostreams::zlib_decompressor());
+        filters.push(input_stream);
+        // TODO handle exceptions/errors
+        boost::iostreams::copy(input_stream, output_stream);
+
+        // ifstream file("hello.z", ios_base::in | ios_base::binary);
+        // filtering_streambuf<input> in;
+        // in.push(zlib_decompressor());
+        // in.push(file);
+        // boost::iostreams::copy(in, cout);
+
+        /*
         const int32_t kStartingCompressionMultiplier = 4;
 
         int32_t compression_multiplier = kStartingCompressionMultiplier;
@@ -79,15 +102,17 @@ namespace renpy
             throw kriabal::RuntimeError();
 
         output_buffer.resize(boost::numeric_cast<size_t>(uncompressed_length));
+        */
     }
 
-    void Archive::ParsePythonIndex(std::string& input_buffer, int64_t encryption_key)
+    void Archive::ParsePythonIndex(std::stringstream& input_buffer, int64_t encryption_key)
     {
         auto ref_pickle_module_name = python::MakeStrongRef(PyUnicode_FromString("pickle"));
         auto ref_pickle_module = python::MakeStrongRef(PyImport_Import(python::RawPtr(ref_pickle_module_name)));
         auto ref_pickle_loader = python::MakeStrongRef(PyObject_GetAttrString(python::RawPtr(ref_pickle_module), "loads"));
 
-        auto ref_pickled_index_bytes = python::MakeWeakRef(PyByteArray_FromStringAndSize(input_buffer.c_str(), input_buffer.size()));
+        auto input_buffer_str = input_buffer.str();
+        auto ref_pickled_index_bytes = python::MakeWeakRef(PyByteArray_FromStringAndSize(input_buffer_str.c_str(), input_buffer_str.size()));
         auto ref_pickle_loader_args = python::MakeWeakRef(PyTuple_New(1));
         Assert(PyTuple_SetItem(python::RawPtr(ref_pickle_loader_args), 0, python::RawPtr(ref_pickled_index_bytes)) == 0);
 

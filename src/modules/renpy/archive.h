@@ -15,8 +15,8 @@ namespace renpy
         Archive() : kriabal::Tome(L"RenPy", "RPA-3.0") {}
         void PrepareItems();
     private:
-        static void UncompressZlibStream(std::string& input_buffer, std::string& output_buffer);
-        void ParsePythonIndex(std::string& input_buffer, int64_t encryption_key);
+        static void UncompressZlibStream(std::string& input_buffer, std::stringstream& output_stream);
+        void ParsePythonIndex(std::stringstream& input_buffer, int64_t encryption_key);
     };
 }
 

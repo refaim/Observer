@@ -49,6 +49,11 @@ jobs:
           restore-keys: |
             vcpkg-${{ matrix.architecture }}-${{ matrix.build-type }}-
 
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          languages: cpp
+
       - name: Build project
         run: >
           msbuild $env:GITHUB_WORKSPACE\src\modules\${{ matrix.module-lowercase }}\${{ matrix.module-lowercase }}.vcxproj
@@ -57,6 +62,9 @@ jobs:
           /p:Platform=${{ matrix.solution-platform }}
           /p:VcpkgTriplet=${{ matrix.architecture }}-windows
           /p:VcpkgConfiguration=${{ matrix.build-type }}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
 
       - name: Upload package
         uses: actions/upload-artifact@v2.3.1

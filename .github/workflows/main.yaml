@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   job:
-    name: ${{ matrix.module }}-${{ matrix.far-version }}-${{ matrix.architecture }}-${{ matrix.build-type }}
+    name: ${{ matrix.module }}-${{ matrix.far-version }}-${{ matrix.architecture }}
     runs-on: windows-2016
     strategy:
       fail-fast: false
@@ -12,7 +12,6 @@ jobs:
         module: [RenPy, Zanzarah]
         far-version: [Far2, Far3]
         architecture: [x86, x64]
-        build-type: [Debug, Release]
         include:
           - module: RenPy
             module-lowercase: renpy
@@ -45,9 +44,9 @@ jobs:
             vcpkg_installed_x86
             vcpkg_installed_x64
             ~\AppData\Local\vcpkg\archives
-          key: vcpkg-${{ matrix.architecture }}-${{ matrix.build-type }}-${{ hashFiles('vcpkg.json') }}-2
+          key: vcpkg-${{ matrix.architecture }}-Release-${{ hashFiles('vcpkg.json') }}-2
           restore-keys: |
-            vcpkg-${{ matrix.architecture }}-${{ matrix.build-type }}-
+            vcpkg-${{ matrix.architecture }}-Release-
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v1
@@ -58,20 +57,26 @@ jobs:
         run: >
           msbuild $env:GITHUB_WORKSPACE\src\modules\${{ matrix.module-lowercase }}\${{ matrix.module-lowercase }}.vcxproj
           /p:OutDir=$env:GITHUB_WORKSPACE\bin\
-          /p:Configuration=${{ matrix.build-type }}-${{ matrix.solution-configuration }}
+          /p:Configuration=Release-${{ matrix.solution-configuration }}
           /p:Platform=${{ matrix.solution-platform }}
           /p:VcpkgTriplet=${{ matrix.architecture }}-windows
-          /p:VcpkgConfiguration=${{ matrix.build-type }}
+          /p:VcpkgConfiguration=Release
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v1
 
-      - name: Upload package
+      - name: Upload module artifact
         uses: actions/upload-artifact@v2.3.1
         with:
-          name: ${{ matrix.module }}-${{ matrix.far-version }}-${{ matrix.architecture }}-${{ matrix.build-type }}
+          name: ${{ matrix.module }}-${{ matrix.far-version }}-${{ matrix.architecture }}
           path: |
             ${{ github.workspace }}\bin\*.dll
             ${{ github.workspace }}\bin\*.so
             ${{ github.workspace }}\bin\*.txt
 
+      - name: Upload PDB artifact
+        uses: actions/upload-artifact@v2.3.1
+        with:
+          name: ${{ matrix.module }}-${{ matrix.far-version }}-${{ matrix.architecture }}-PDB
+          path: |
+            ${{ github.workspace }}\bin\*.pdb

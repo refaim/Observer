@@ -319,7 +319,7 @@
     </ClCompile>
     <Link>
       <ModuleDefinitionFile>zanzarah.def</ModuleDefinitionFile>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -342,7 +342,7 @@
     </ClCompile>
     <Link>
       <ModuleDefinitionFile>zanzarah.def</ModuleDefinitionFile>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -368,7 +368,7 @@
     </ClCompile>
     <Link>
       <ModuleDefinitionFile>zanzarah.def</ModuleDefinitionFile>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -394,7 +394,7 @@
     </ClCompile>
     <Link>
       <ModuleDefinitionFile>zanzarah.def</ModuleDefinitionFile>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

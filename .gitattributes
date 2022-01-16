@@ -1,7 +1,2 @@
-*.def eol=crlf
-*.sln eol=crlf
-*.vcxproj eol=crlf
-*.vcxproj.* eol=crlf
-
 *.dll binary
-*.rar binary
+*.zip binary

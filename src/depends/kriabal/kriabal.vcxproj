@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="kriabal.h" />
+    <ClInclude Include="submodule.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="_common.h" />
     <ClInclude Include="_stream.h" />

@@ -11,9 +11,9 @@
 - Blorb
 - Witcher 1/2/3
 - Disciples 2
-- Bethesda (BSA/BA2)
+- Bethesda (BSA/BA2) [нужен C++20]
 
 CI:
-- Попробовать обновиться на windows-2019
+- Попробовать обновиться на образ windows-2019
 - Добавить в артефакты readme на русском языке
-- Настроить анализ кода через MSBuild и настроить загрузку SARIF-отчётов на GitHub
+- Настроить анализ кода через MSBuild и настроить загрузку SARIF-отчётов на GitHub [нужна Visual Studio 2019]

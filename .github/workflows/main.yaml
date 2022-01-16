@@ -63,7 +63,7 @@ jobs:
           /p:VcpkgTriplet=${{ matrix.architecture }}-windows
           /p:VcpkgConfiguration=${{ matrix.build-type }}
 
-      - name: Perform CodeQL Analysis
+      - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v1
 
       - name: Upload package

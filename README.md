@@ -4,8 +4,8 @@
 **This repository is a fork of https://github.com/lazyhamster/Observer**
 
 It adds support of the following formats:
-  - Ren'Py Visual Novel Engine archives (RPA)
-  - Zanzarah: The Hidden Portal game data (PAK)
+  - [Ren'Py Visual Novel Engine](https://www.renpy.org/) archives (RPA)
+  - [Zanzarah: The Hidden Portal](https://en.wikipedia.org/wiki/ZanZarah:_The_Hidden_Portal) game data (PAK)
 
 ## How to install
 
@@ -20,3 +20,7 @@ All additional libraries will be installed according to `vcpkg.json` manifest fi
 
 ### Additional requirements
 * M4 Macro Processor (must be in %PATH%)
+
+## Links
+
+[Support Forum (in Russian)](https://forum.farmanager.com/viewtopic.php?t=12729)

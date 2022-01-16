@@ -3,8 +3,16 @@
 
 #include "stdafx.h"
 
-#include <algorithm>
+#include <cstdint>
+#include <cstring>
+
+#include <memory>
+#include <utility>
+
+#include <boost/numeric/conversion/cast.hpp>
 #include <zlib.h>
+
+#include "kriabal\kriabal.h"
 
 #include "archive.h"
 #include "python.h"

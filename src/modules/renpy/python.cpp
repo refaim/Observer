@@ -3,6 +3,8 @@
 
 #include "stdafx.h"
 
+#include <memory>
+
 #include "python.h"
 
 namespace renpy::python

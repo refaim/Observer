@@ -1,10 +1,13 @@
-#ifndef kriabal_h__
-#define kriabal_h__
+#ifndef KRIABAL_KRIABAL_H_
+#define KRIABAL_KRIABAL_H_
 
+#include <cstdint>
+
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "_windef.h"
+#include "ModuleWin.h"
 #include "ModuleDef.h"
 
 #include "_common.h"
@@ -51,4 +54,4 @@ namespace kriabal
     };
 }
 
-#endif
+#endif // KRIABAL_KRIABAL_H_

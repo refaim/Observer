@@ -1,5 +1,5 @@
-#ifndef python_h__
-#define python_h__
+#ifndef RENPY_PYTHON_H_
+#define RENPY_PYTHON_H_
 
 #include <exception>
 #include <memory>
@@ -40,4 +40,4 @@ namespace renpy::python
     PyObject* RawPtr(std::unique_ptr<StrongReference>& ref);
 }
 
-#endif
+#endif // RENPY_PYTHON_H_

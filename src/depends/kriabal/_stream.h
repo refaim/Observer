@@ -1,11 +1,14 @@
-#ifndef _stream_h__
-#define _stream_h__
+#ifndef KRIABAL_STREAM_H_
+#define KRIABAL_STREAM_H_
 
 #include <cstdint>
+
+#include <memory>
 #include <string>
 
-#include "_windef.h"
+#include "ModuleWin.h"
 #include "modulecrt/Streams.h"
+
 #include "_common.h"
 
 namespace kriabal::stream
@@ -41,4 +44,4 @@ namespace kriabal::stream
     };
 }
 
-#endif
+#endif // KRIABAL_STREAM_H_

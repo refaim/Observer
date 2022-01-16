@@ -1,10 +1,25 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+#include "stdafx.h"
+
 #include "kriabal.h"
 
+#include <cstdint>
+#include <cstring>
+
 #include <algorithm>
+#include <memory>
+#include <string>
+#include <vector>
+
 #include <boost/numeric/conversion/cast.hpp>
+
+#include "ModuleWin.h"
+#include "ModuleDef.h"
+
+#include "_common.h"
+#include "_stream.h"
 
 namespace kriabal
 {

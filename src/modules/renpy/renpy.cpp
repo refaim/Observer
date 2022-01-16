@@ -3,8 +3,10 @@
 
 #include "stdafx.h"
 
+#include "ModuleWin.h"
 #include "ModuleDef.h"
 
+#include "kriabal\kriabal.h"
 #include "archive.h"
 
 int MODULE_EXPORT OpenStorage(StorageOpenParams params, HANDLE* storage, StorageGeneralInfo* info) //-V813

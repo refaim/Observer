@@ -1,5 +1,11 @@
-#ifndef archive_h__
-#define archive_h__
+#ifndef ZANZARAH_ARCHIVE_H_
+#define ZANZARAH_ARCHIVE_H_
+
+#include <cstdint>
+
+#include <vector>
+
+#include "ModuleDef.h"
 
 #include "kriabal\kriabal.h"
 
@@ -18,4 +24,4 @@ namespace zanzarah
     };
 }
 
-#endif
+#endif // ZANZARAH_ARCHIVE_H_

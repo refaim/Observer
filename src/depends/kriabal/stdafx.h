@@ -1,17 +1,15 @@
-#ifndef RENPY_STDAFX_H_
-#define RENPY_STDAFX_H_
+#ifndef KRIABAL_STDAFX_H_
+#define KRIABAL_STDAFX_H_
 
 // Windows headers
 #include "ModuleWin.h"
 
 // Additional headers
 #include <cstdint>
-#include <cstring>
-
-#include <exception>
 #include <memory>
-#include <utility>
+#include <string>
+#include <vector>
 
 #include <boost/numeric/conversion/cast.hpp>
 
-#endif // RENPY_STDAFX_H_
+#endif // KRIABAL_STDAFX_H_

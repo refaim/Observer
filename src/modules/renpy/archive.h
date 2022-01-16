@@ -1,5 +1,5 @@
-#ifndef archive_h__
-#define archive_h__
+#ifndef RENPY_ARCHIVE_H_
+#define RENPY_ARCHIVE_H_
 
 #include "kriabal\kriabal.h"
 
@@ -20,4 +20,4 @@ namespace renpy
     };
 }
 
-#endif
+#endif // RENPY_ARCHIVE_H_

@@ -1,7 +1,19 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
+#include "stdafx.h"
+
 #include "_stream.h"
+
+#include <cerrno>
+#include <climits>
+#include <cstdint>
+#include <cstdlib>
+
+#include <memory>
+#include <string>
+
+#include "modulecrt/Streams.h"
 
 namespace kriabal::stream
 {

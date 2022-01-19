@@ -4,11 +4,11 @@
   "version": "1.12.1",
   "dependencies": [
     "boost-iostreams",
-    "boost-numeric-conversion",
     "bzip2",
     "glib",
     "gmime",
     "libmspack",
+    "ms-gsl",
     "python3",
     "zlib"
   ],

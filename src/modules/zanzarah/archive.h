@@ -7,7 +7,7 @@
 
 #include "ModuleDef.h"
 
-#include "kriabal\kriabal.h"
+#include "kriabal/kriabal.h"
 
 namespace zanzarah
 {
@@ -17,8 +17,8 @@ namespace zanzarah
     {
     public:
         Archive() : kriabal::Tome(L"Zanzarah", std::vector<unsigned char>({0, 0, 0, 0})), num_of_files_(0) {}
-        void Open(StorageOpenParams params);
-        void PrepareItems();
+        void Open(StorageOpenParams params) override;
+        void PrepareItems() override;
     private:
         int32_t num_of_files_;
     };

@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include <boost/numeric/conversion/cast.hpp>
+#include <gsl/gsl>
 
 #include "ModuleWin.h"
 #include "ModuleDef.h"
@@ -23,20 +23,18 @@
 
 namespace kriabal
 {
-    void CopyString(std::wstring source, wchar_t* destination, int32_t max_len)
+    void CopyString(std::wstring source, gsl::span<wchar_t> destination, int32_t max_len)
     {
-        if (wcscpy_s(destination, max_len, source.c_str()) != 0)
+        if (wcscpy_s(destination.data(), max_len, source.c_str()) != 0)
             throw RuntimeError();
     }
 
-    bool SignatureMatchOrNull(const void* buffer, size_t buffer_size, const std::vector<unsigned char>& signature)
+    bool DataMatchesSignature(gsl::span<const char> buffer, const std::vector<unsigned char>& signature) noexcept
     {
-        if (buffer == nullptr) return true;
-        if (signature.size() > buffer_size) return false;
+        if (signature.size() > buffer.size()) return false;
 
-        auto char_buffer = reinterpret_cast<const unsigned char*>(buffer);
         for (size_t i = 0; i < signature.size(); ++i)
-            if (signature[i] != char_buffer[i])
+            if (gsl::at(signature, i) != gsl::at(buffer, i))
                 return false;
 
         return true;
@@ -44,7 +42,7 @@ namespace kriabal
 
     void Tome::Open(StorageOpenParams params)
     {
-        if (!SignatureMatchOrNull(params.Data, params.DataSize, signature_))
+        if (params.Data != nullptr && !DataMatchesSignature(gsl::make_span(static_cast<const char*>(params.Data), params.DataSize), signature_))
             throw RuntimeError();
 
         stream_ = std::make_unique<stream::FileStream>(params.FilePath, true, false);
@@ -61,8 +59,8 @@ namespace kriabal
     const Item& Tome::GetItem(size_t index) const
     {
         if (index < 0) throw RuntimeError();
-        if (boost::numeric_cast<size_t>(index) >= items_.size()) throw ItemIndexTooLargeError();
-        return *items_[index].get();
+        if (gsl::narrow<size_t>(index) >= items_.size()) throw ItemIndexTooLargeError();
+        return *gsl::at(items_, index).get();
     }
 
     void Tome::FillItemInfo(const Item& item, StorageItemInfo* output)
@@ -92,7 +90,7 @@ namespace kriabal
         stream_->Seek(item.offset);
         while (bytes_left > 0)
         {
-            size_t chunk_length = boost::numeric_cast<size_t>(min(bytes_left, buffer->size()));
+            const size_t chunk_length = gsl::narrow<size_t>(min(bytes_left, buffer->size()));
             stream_->ReadBytes(*buffer.get(), chunk_length);
             output_stream->WriteBytes(*buffer.get(), chunk_length);
 

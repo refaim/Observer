@@ -12,6 +12,6 @@
 #include <memory>
 #include <utility>
 
-#include <boost/numeric/conversion/cast.hpp>
+#include <gsl/gsl>
 
 #endif // RENPY_STDAFX_H_

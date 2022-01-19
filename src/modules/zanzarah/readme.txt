@@ -18,8 +18,8 @@ https://github.com/refaim/Observer
 
 ## Used third-party code
 
-- Boost C++ Libraries (https://www.boost.org)
-  License: BSL
+- Guidelines Support Library (https://github.com/microsoft/GSL)
+  License: MIT
 
 - Observer (https://github.com/lazyhamster/Observer/)
   License: LGPLv3

@@ -66,7 +66,7 @@ namespace kriabal::stream
 
     int32_t FileStream::ReadSignedPositiveInt32FromBytes()
     {
-        int32_t result = ReadSignedPositiveOrZeroInt32FromBytes();
+        const int32_t result = ReadSignedPositiveOrZeroInt32FromBytes();
 
         if (result == 0)
             throw NumberReadNotAPositiveNumberError();
@@ -80,7 +80,7 @@ namespace kriabal::stream
         if (!stream_->ReadBuffer(&buffer, 4))
             throw ReadError();
 
-        int32_t result = buffer[0] | (buffer[1] << 8) | (buffer[2] << 16) | (buffer[3] << 24);
+        const int32_t result = buffer[0] | (buffer[1] << 8) | (buffer[2] << 16) | (buffer[3] << 24);
         if (result < 0)
             throw NumberReadNotAPositiveOrZeroNumberError();
 
@@ -93,7 +93,7 @@ namespace kriabal::stream
         ReadBytes(buffer, buffer.size());
 
         char* dummy;
-        int64_t result = std::strtoll(buffer.c_str(), &dummy, 16);
+        const int64_t result = std::strtoll(buffer.c_str(), &dummy, 16);
         if (errno == ERANGE)
         {
             if (result == LLONG_MIN)

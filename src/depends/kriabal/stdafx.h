@@ -10,6 +10,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/numeric/conversion/cast.hpp>
+#include <gsl/gsl>
 
 #endif // KRIABAL_STDAFX_H_

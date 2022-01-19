@@ -9,7 +9,7 @@
 
 namespace renpy::python
 {
-    Context::Context()
+    Context::Context() noexcept
     {
         Py_Initialize();
     }
@@ -31,7 +31,7 @@ namespace renpy::python
         raw_ = nullptr;
     }
 
-    PyObject* WeakReference::Raw()
+    PyObject* WeakReference::Raw() noexcept
     {
         return raw_;
     }
@@ -53,12 +53,12 @@ namespace renpy::python
         return std::make_unique<StrongReference>(ptr);
     }
 
-    PyObject* RawPtr(std::unique_ptr<WeakReference>& ref)
+    PyObject* RawPtr(std::unique_ptr<WeakReference>& ref) noexcept
     {
         return ref.get()->Raw();
     }
 
-    PyObject* RawPtr(std::unique_ptr<StrongReference>& ref)
+    PyObject* RawPtr(std::unique_ptr<StrongReference>& ref) noexcept
     {
         return ref.get()->Raw();
     }

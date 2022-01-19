@@ -20,8 +20,8 @@ namespace kriabal
 
     struct Item
     {
-        int64_t offset;
-        int64_t size_in_bytes;
+        int64_t offset = 0;
+        int64_t size_in_bytes = 0;
         std::string path;
         std::string header;
     };

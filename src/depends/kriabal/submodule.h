@@ -9,7 +9,7 @@
 namespace kriabal::submodule
 {
     template<class StorageClass>
-    int MODULE_EXPORT load(int major_version, int minor_version, const GUID& guid, ModuleLoadParameters* load_params)
+    int MODULE_EXPORT load(int major_version, int minor_version, const GUID& guid, ModuleLoadParameters* load_params) noexcept
     {
         load_params->ModuleId = guid;
         load_params->ModuleVersion = MAKEMODULEVERSION(major_version, minor_version);
@@ -27,6 +27,9 @@ namespace kriabal::submodule
         template<class StorageClass>
         int MODULE_EXPORT open_storage(StorageOpenParams params, HANDLE* storage, StorageGeneralInfo* info)
         {
+            if (storage == nullptr) return SOR_INVALID_FILE;
+
+            #pragma warning(suppress: 26409)
             auto archive = new StorageClass();
             try
             {
@@ -43,20 +46,19 @@ namespace kriabal::submodule
         }
 
         template<class StorageClass>
-        void MODULE_EXPORT close_storage(HANDLE storage)
+        void MODULE_EXPORT close_storage(HANDLE storage) noexcept
         {
-            if (storage == nullptr) return;
-
             auto archive = static_cast<StorageClass*>(storage);
+            if (archive == nullptr) return;
             delete archive;
         }
 
         template<class StorageClass>
         int MODULE_EXPORT prepare_files(HANDLE storage)
         {
-            if (storage == nullptr) return FALSE;
-
             auto archive = static_cast<StorageClass*>(storage);
+            if (archive == nullptr) return FALSE;
+
             try
             {
                 archive->PrepareItems();
@@ -71,9 +73,9 @@ namespace kriabal::submodule
         template<class StorageClass>
         int MODULE_EXPORT get_storage_item(HANDLE storage, int item_index, StorageItemInfo* item_info)
         {
-            if (storage == nullptr) return GET_ITEM_ERROR;
-
             auto archive = static_cast<StorageClass*>(storage);
+            if (archive == nullptr) return GET_ITEM_ERROR;
+
             try
             {
                 archive->FillItemInfo(archive->GetItem(item_index), item_info);
@@ -92,9 +94,9 @@ namespace kriabal::submodule
         template<class StorageClass>
         int MODULE_EXPORT extract_item(HANDLE storage, ExtractOperationParams params) //-V813
         {
-            if (storage == nullptr) return SER_ERROR_SYSTEM;
-
             auto archive = static_cast<StorageClass*>(storage);
+            if (archive == nullptr) return SER_ERROR_SYSTEM;
+
             try
             {
                 archive->ExtractItem(archive->GetItem(params.ItemIndex), params);

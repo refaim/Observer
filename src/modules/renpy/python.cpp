@@ -3,9 +3,9 @@
 
 #include "stdafx.h"
 
-#include <memory>
-
 #include "python.h"
+
+#include <memory>
 
 namespace renpy::python
 {

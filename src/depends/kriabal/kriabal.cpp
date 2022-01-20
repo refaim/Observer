@@ -42,7 +42,7 @@ namespace kriabal
 
     void Tome::Open(StorageOpenParams params)
     {
-        if (params.Data != nullptr && !DataMatchesSignature(gsl::make_span(static_cast<const char*>(params.Data), params.DataSize), signature_))
+        if (params.Data != nullptr && signature_.size() > 0 && !DataMatchesSignature(gsl::make_span(static_cast<const char*>(params.Data), params.DataSize), signature_))
             throw RuntimeError();
 
         stream_ = std::make_unique<stream::FileStream>(params.FilePath, true, false);
@@ -85,14 +85,12 @@ namespace kriabal
             ReportExtractionProgress(params.Callbacks, item.header.size());
         }
 
-        auto buffer = std::make_unique<std::string>(32 * 1024, '\0');
-
         stream_->Seek(item.offset);
         while (bytes_left > 0)
         {
-            const size_t chunk_length = gsl::narrow<size_t>(min(bytes_left, buffer->size()));
-            stream_->ReadBytes(*buffer.get(), chunk_length);
-            output_stream->WriteBytes(*buffer.get(), chunk_length);
+            const size_t chunk_length = gsl::narrow<size_t>(min(bytes_left, buffer_.size()));
+            stream_->ReadBytes(buffer_, chunk_length);
+            output_stream->WriteBytes(buffer_, chunk_length);
 
             bytes_left -= chunk_length;
             ReportExtractionProgress(params.Callbacks, chunk_length);

@@ -9,10 +9,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [RenPy, Zanzarah]
+        module: [FB2, RenPy, Zanzarah]
         far-version: [Far2, Far3]
         architecture: [x86, x64]
         include:
+          - module: FB2
+            module-lowercase: fb2
           - module: RenPy
             module-lowercase: renpy
           - module: Zanzarah

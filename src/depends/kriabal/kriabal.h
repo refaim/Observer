@@ -29,8 +29,9 @@ namespace kriabal
     class Tome
     {
     public:
-        Tome(std::wstring format, std::string signature) : format_(format), signature_(signature.begin(), signature.end()) {};
-        Tome(std::wstring format, std::vector<unsigned char> signature) : format_(format), signature_(signature) {};
+        Tome(std::wstring format, std::string signature) : format_(format), signature_(signature.begin(), signature.end()) {}
+        Tome(std::wstring format, std::vector<unsigned char> signature) : format_(format), signature_(signature) {}
+        Tome(std::wstring format) : format_(format) {}
         virtual void Open(StorageOpenParams params);
         void FillGeneralInfo(StorageGeneralInfo* info);
         virtual void PrepareItems() = 0;
@@ -49,6 +50,7 @@ namespace kriabal
         std::wstring format_;
         std::vector<unsigned char> signature_;
         std::vector<std::unique_ptr<Item>> items_;
+        std::string buffer_ = std::string(32 * 1024, '\0');
 
         void ReportExtractionProgress(const ExtractProcessCallbacks& callbacks, int64_t num_of_bytes);
     };

@@ -3,6 +3,8 @@
 
 #include "stdafx.h"
 
+#include "archive.h"
+
 #include <cstdint>
 #include <cstring>
 
@@ -14,7 +16,6 @@
 
 #include "kriabal/kriabal.h"
 
-#include "archive.h"
 #include "python.h"
 
 namespace renpy

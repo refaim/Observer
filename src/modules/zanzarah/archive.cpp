@@ -3,14 +3,14 @@
 
 #include "stdafx.h"
 
+#include "archive.h"
+
 #include <cstdint>
 
 #include <memory>
 #include <string>
 #include <vector>
 #include <utility>
-
-#include "archive.h"
 
 #include "ModuleDef.h"
 

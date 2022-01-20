@@ -1,0 +1,5 @@
+LIBRARY "fb2.so"
+
+EXPORTS
+    LoadSubModule
+    UnloadSubModule

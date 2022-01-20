@@ -8,8 +8,10 @@
     "glib",
     "gmime",
     "libmspack",
+    "modp-base64",
     "ms-gsl",
     "python3",
+    "xerces-c",
     "zlib"
   ],
   "overrides": [

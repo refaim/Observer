@@ -12,7 +12,7 @@ Supported RPA file format versions:
 
 ## License
 
-LGPLv3, see Renpy.License.*.txt files
+LGPLv3, see RenPy.License.*.txt files
 
 ## Source code
 

@@ -1,9 +1,9 @@
-// %LOWERCASE_MODULE_NAME%.cpp : Defines the exported functions for the DLL application.
-//
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 
 #include "stdafx.h"
-#include "ModuleDef.h"
 
+#include "ModuleDef.h"
 
 int MODULE_EXPORT OpenStorage(StorageOpenParams params, HANDLE *storage, StorageGeneralInfo* info)
 {
@@ -36,7 +36,7 @@ int MODULE_EXPORT ExtractItem(HANDLE storage, ExtractOperationParams params)
 // %GUID_STRING%
 static const GUID MODULE_GUID = %GUID_STRUCT%;
 
-int MODULE_EXPORT LoadSubModule(ModuleLoadParameters* LoadParams)
+int MODULE_EXPORT LoadSubModule(ModuleLoadParameters* LoadParams) noexcept
 {
     LoadParams->ModuleId = MODULE_GUID;
     LoadParams->ModuleVersion = MAKEMODULEVERSION(1, 0);
@@ -50,6 +50,6 @@ int MODULE_EXPORT LoadSubModule(ModuleLoadParameters* LoadParams)
     return TRUE;
 }
 
-void MODULE_EXPORT UnloadSubModule()
+void MODULE_EXPORT UnloadSubModule() noexcept
 {
 }

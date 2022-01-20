@@ -1,15 +1,9 @@
-// stdafx.h : include file for standard system include files,
-// or project specific include files that are used frequently, but
-// are changed infrequently
-//
+#ifndef %UPPERCASE_MODULE_NAME%_STDAFX_H_
+#define %UPPERCASE_MODULE_NAME%_STDAFX_H_
 
-#pragma once
-
-#include "targetver.h"
-
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-// Windows Header Files:
-#include <windows.h>
-
+// Windows headers
+#include "ModuleWin.h"
 
 // Additional headers
+
+#endif // %UPPERCASE_MODULE_NAME%_STDAFX_H_

@@ -8,11 +8,12 @@ INDENT = 4 * ' '
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("module_name")
+    parser.add_argument("camel_case_module_name")
     args = parser.parse_args()
 
-    lc_module_name = args.module_name.lower()
-    uc_module_name = args.module_name.upper()
+    cc_module_name = args.camel_case_module_name
+    lc_module_name = args.camel_case_module_name.lower()
+    uc_module_name = args.camel_case_module_name.upper()
 
     template_dir_name = "module_template"
     if template_dir_name == lc_module_name:
@@ -44,6 +45,7 @@ def main():
     uuid_tail = ", ".join(f"0x{h[i:i+2]}" for i in range(16, 32, 2))
 
     replacements = {
+        r"%CAMELCASE_MODULE_NAME%": cc_module_name,
         r"%LOWERCASE_MODULE_NAME%": lc_module_name,
         r"%UPPERCASE_MODULE_NAME%": uc_module_name,
         r"%GUID_STRING%": f"{{{str(uuid_object).upper()}}}",

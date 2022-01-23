@@ -1,6 +1,8 @@
 #ifndef SfFile_h__
 #define SfFile_h__
 
+#include <string>
+
 #include "modulecrt/Streams.h"
 
 enum EntryCompression

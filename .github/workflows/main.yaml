@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   job:
     name: ${{ matrix.module }}-${{ matrix.far-version }}-${{ matrix.architecture }}
-    runs-on: windows-2016
+    runs-on: windows-2019
     strategy:
       fail-fast: false
       matrix:
@@ -44,14 +44,16 @@ jobs:
             vcpkg_installed_x86
             vcpkg_installed_x64
             ~\AppData\Local\vcpkg\archives
-          key: vcpkg-${{ matrix.architecture }}-Release-${{ hashFiles('vcpkg.json') }}-2
-          restore-keys: |
-            vcpkg-${{ matrix.architecture }}-Release-
+          key: vcpkg-${{ matrix.architecture }}-Release-${{ hashFiles('vcpkg.json') }}-3
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v1
         with:
           languages: cpp
+
+      - name: Setup props
+        run: |
+          Copy-Item -Path src\plugin\ObserverProps.props.example -Destination src\plugin\ObserverProps.props
 
       - name: Build project
         run: >

@@ -1,5 +1,7 @@
 #include "StdAfx.h"
 
+#include <string>
+
 static bool SameText(const char* str1, const char* str2)
 {
 	return _stricmp(str1, str2) == 0;

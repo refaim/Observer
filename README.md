@@ -12,14 +12,22 @@ It adds support of the following formats:
 Download [nigthly build](https://nightly.link/refaim/Observer/workflows/main.yaml/master), follow the instructions inside the archive.
 
 ## How to build from source
-Project is developed under MS Visual Studio 2017.
+Project is developed under MS Visual Studio 2019.
 
 Observer modules depend on several libraries that are not supplied with sources.
 Observer uses [vcpkg Manifest Mode MSBuild Integration](https://vcpkg.readthedocs.io/en/latest/users/manifests/#msbuild-integration).
 All additional libraries will be installed according to `vcpkg.json` manifest file the first time you build the project.
 
+### Additional required Visual Studio components
+* C++/CLI support (for `vdisk` module)
+* Windows 10 SDK
+
 ### Additional requirements
 * M4 Macro Processor (must be in %PATH%)
+
+### Build instructions
+* Copy `src\plugin\ObserverProps.props.example` to `src\plugin\ObserverProps.props` and set paths to debug builds
+* Build solution
 
 ## Links
 

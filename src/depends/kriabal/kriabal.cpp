@@ -46,6 +46,7 @@ namespace kriabal
             throw RuntimeError();
 
         stream_ = std::make_unique<stream::FileStream>(params.FilePath, true, false);
+        reader_ = std::make_unique<stream::AdvancedStreamReader>(stream_.get());
     }
 
     void Tome::FillGeneralInfo(StorageGeneralInfo* info)

@@ -14,6 +14,8 @@ class AStream
 public:
 	virtual ~AStream() {}
 	
+	virtual bool IsValid() = 0;
+
 	virtual int64_t GetPos();
 	virtual bool SetPos(int64_t newPos);
 	bool Skip(int64_t numBytes) { return Seek(numBytes, STREAM_CURRENT); }
@@ -90,6 +92,8 @@ public:
 	CMemoryStream(size_t initialCapacity = MEM_EXPAND_CHUNK_SIZE);
 	~CMemoryStream();
 
+	bool IsValid();
+
 	int64_t GetSize();
 	bool Seek(int64_t seekPos, int8_t seekOrigin);
 	bool Seek(int64_t seekPos, int64_t* newPos, int8_t seekOrigin);
@@ -106,6 +110,8 @@ class CNullStream : public AStream
 {
 public:
 	CNullStream() {}
+
+	bool IsValid();
 
 	int64_t GetSize();
 	bool Seek(int64_t seekPos, int8_t seekOrigin);
@@ -125,6 +131,8 @@ private:
 
 public:
 	CPartialStream(AStream* parentStream, int64_t partStartOffset, int64_t partSize);
+
+	bool IsValid();
 
 	int64_t GetSize();
 	bool Seek(int64_t seekPos, int8_t seekOrigin);

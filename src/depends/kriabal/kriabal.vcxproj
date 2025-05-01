@@ -39,7 +39,7 @@
     <ClInclude Include="submodule.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="_common.h" />
-    <ClInclude Include="_stream.h" />
+    <ClInclude Include="streams.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="kriabal.cpp" />
@@ -53,7 +53,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug-Far3|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug-Unicode|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="_stream.cpp" />
+    <ClCompile Include="streams.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B2EED9A5-EA4B-412E-9B14-02FD20449E6C}</ProjectGuid>

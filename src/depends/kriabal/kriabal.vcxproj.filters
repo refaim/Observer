@@ -18,7 +18,7 @@
     <ClInclude Include="kriabal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="_stream.h">
+    <ClInclude Include="streams.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="_common.h">
@@ -32,7 +32,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="_stream.cpp">
+    <ClCompile Include="streams.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="kriabal.cpp">

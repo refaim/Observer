@@ -463,7 +463,6 @@
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release-Unicode|x64'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release-Far3|x64'">false</CompileAsManaged>
     </ClCompile>
-    <ClCompile Include="python.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug-Unicode|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug-Far3|Win32'">Create</PrecompiledHeader>
@@ -478,7 +477,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="archive.h" />
-    <ClInclude Include="python.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

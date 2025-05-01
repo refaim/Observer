@@ -162,6 +162,11 @@ CFileStream* CFileStream::Open( const wchar_t* filePath, bool readOnly, bool cre
 
 //////////////////////////////////////////////////////////////////////////
 
+bool CNullStream::IsValid()
+{
+	return true;
+}
+
 bool CNullStream::ReadBufferAny( LPVOID buffer, size_t bufferSize, size_t *readSize )
 {
 	return false;
@@ -206,6 +211,11 @@ CMemoryStream::CMemoryStream( size_t initialCapacity )
 CMemoryStream::~CMemoryStream()
 {
 	free(m_pDataBuffer);
+}
+
+bool CMemoryStream::IsValid()
+{
+	return (m_pDataBuffer != NULL);
 }
 
 bool CMemoryStream::Seek( int64_t seekPos, int8_t seekOrigin )
@@ -332,6 +342,11 @@ CPartialStream::CPartialStream( AStream* parentStream, int64_t partStartOffset, 
 	m_nStartOffset = max(partStartOffset, 0);
 	m_nSize = max(partSize, 0);
 	m_nCurrentPos = 0;
+}
+
+bool CPartialStream::IsValid()
+{
+	return m_pParentStream != NULL && m_pParentStream->IsValid();
 }
 
 int64_t CPartialStream::GetSize()

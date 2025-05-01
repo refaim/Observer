@@ -11,7 +11,7 @@
 #include "ModuleDef.h"
 
 #include "_common.h"
-#include "_stream.h"
+#include "streams.h"
 
 namespace kriabal
 {
@@ -39,6 +39,7 @@ namespace kriabal
         void ExtractItem(const Item& item, const ExtractOperationParams& params);
     protected:
         std::unique_ptr<stream::FileStream> stream_;
+        std::unique_ptr<stream::AdvancedStreamReader> reader_;
 
         void SkipSignature();
         void ReserveItems(size_t count);

@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 
-#include "_stream.h"
+#include "streams.h"
 
 #include <cerrno>
 #include <climits>
@@ -17,36 +17,29 @@
 
 namespace kriabal::stream
 {
-    FileStream::FileStream(std::wstring path, bool read_only, bool create_if_not_exists)
-    {
-        stream_ = std::make_unique<CFileStream>(path.c_str(), read_only, create_if_not_exists);
-        if (!stream_->IsValid())
-            throw RuntimeError();
-    }
-
-    int64_t FileStream::GetPosition()
+    int64_t AbstractStream::GetPosition()
     {
         return stream_->GetPos();
     }
 
-    int64_t FileStream::GetFileSizeInBytes()
+    int64_t AbstractStream::GetSizeInBytes()
     {
         return stream_->GetSize();
     }
 
-    void FileStream::Seek(int64_t position)
+    void AbstractStream::Seek(int64_t position)
     {
         if (!stream_->Seek(position, STREAM_BEGIN))
             throw ReadError();
     }
 
-    void FileStream::Skip(int64_t num_of_bytes)
+    void AbstractStream::Skip(int64_t num_of_bytes)
     {
         if (!stream_->Skip(num_of_bytes))
             throw ReadError();
     }
 
-    void FileStream::ReadBytes(std::string& buffer, size_t num_of_bytes)
+    void AbstractStream::ReadBytes(std::string& buffer, size_t num_of_bytes)
     {
         if (buffer.size() < num_of_bytes)
             throw ReadError();
@@ -55,7 +48,7 @@ namespace kriabal::stream
             throw ReadError();
     }
 
-    void FileStream::WriteBytes(const std::string& buffer, size_t num_of_bytes)
+    void AbstractStream::WriteBytes(const std::string& buffer, size_t num_of_bytes)
     {
         if (buffer.size() < num_of_bytes)
             throw WriteError();
@@ -64,7 +57,7 @@ namespace kriabal::stream
             throw WriteError();
     }
 
-    int32_t FileStream::ReadSignedPositiveInt32FromBytes()
+    int32_t AdvancedStreamReader::ReadSignedPositiveInt32FromBytes()
     {
         const int32_t result = ReadSignedPositiveOrZeroInt32FromBytes();
 
@@ -74,11 +67,10 @@ namespace kriabal::stream
         return result;
     }
 
-    int32_t FileStream::ReadSignedPositiveOrZeroInt32FromBytes()
+    int32_t AdvancedStreamReader::ReadSignedPositiveOrZeroInt32FromBytes()
     {
-        unsigned char buffer[4];
-        if (!stream_->ReadBuffer(&buffer, 4))
-            throw ReadError();
+        std::string buffer(4, '\0');
+        stream_.ReadBytes(buffer, buffer.size());
 
         const int32_t result = buffer[0] | (buffer[1] << 8) | (buffer[2] << 16) | (buffer[3] << 24);
         if (result < 0)
@@ -87,10 +79,10 @@ namespace kriabal::stream
         return result;
     }
 
-    int64_t FileStream::ReadSignedPositiveInt64FromHexString()
+    int64_t AdvancedStreamReader::ReadSignedPositiveInt64FromHexString()
     {
         std::string buffer(sizeof(int64_t) * 2, '\0');
-        ReadBytes(buffer, buffer.size());
+        stream_.ReadBytes(buffer, buffer.size());
 
         char* dummy;
         const int64_t result = std::strtoll(buffer.c_str(), &dummy, 16);
@@ -109,6 +101,22 @@ namespace kriabal::stream
             throw NumberReadNotAPositiveNumberError();
 
         return result;
+    }
+
+    MemoryStream::MemoryStream(size_t initial_capacity)
+    {
+        auto stream = std::make_unique<CMemoryStream>(initial_capacity);
+        if (!stream->IsValid())
+            throw RuntimeError();
+        stream_ = std::move(stream);
+    }
+
+    FileStream::FileStream(std::wstring path, bool read_only, bool create_if_not_exists)
+    {
+        auto stream = std::make_unique<CFileStream>(path.c_str(), read_only, create_if_not_exists);
+        if (!stream->IsValid())
+            throw RuntimeError();
+        stream_ = std::move(stream);
     }
 }
 

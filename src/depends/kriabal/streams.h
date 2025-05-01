@@ -26,21 +26,41 @@ namespace kriabal::stream
     class NumberReadOverflowError : public RuntimeError {};
     class NumberReadUnderflowError : public RuntimeError {};
 
-    class FileStream
+    class AbstractStream
     {
     public:
-        FileStream(std::wstring path, bool read_only, bool create_if_not_exists);
         int64_t GetPosition();
-        int64_t GetFileSizeInBytes();
+        int64_t GetSizeInBytes();
         void Seek(int64_t position);
         void Skip(int64_t num_of_bytes);
         void ReadBytes(std::string& buffer, size_t num_of_bytes);
         void WriteBytes(const std::string& buffer, size_t num_of_bytes);
+    protected:
+        // TODO check that CHILD destructor is called !!!
+        std::unique_ptr<AStream> stream_;
+    };
+
+    class MemoryStream : public AbstractStream
+    {
+    public:
+        MemoryStream(size_t initial_capacity);
+    };
+
+    class FileStream : public AbstractStream
+    {
+    public:
+        FileStream(std::wstring path, bool read_only, bool create_if_not_exists);
+    };
+
+    class AdvancedStreamReader
+    {
+    public:
+        AdvancedStreamReader(AbstractStream& stream) : stream_(stream) {}
         int32_t ReadSignedPositiveInt32FromBytes();
         int32_t ReadSignedPositiveOrZeroInt32FromBytes();
         int64_t ReadSignedPositiveInt64FromHexString();
     private:
-        std::unique_ptr<CFileStream> stream_;
+        AbstractStream& stream_;
     };
 }
 

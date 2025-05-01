@@ -29,7 +29,6 @@ namespace kriabal::submodule
         {
             if (storage == nullptr) return SOR_INVALID_FILE;
 
-            #pragma warning(suppress: 26409)
             auto archive = new StorageClass();
             try
             {

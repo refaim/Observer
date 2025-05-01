@@ -1,9 +1,12 @@
 #ifndef RENPY_ARCHIVE_H_
 #define RENPY_ARCHIVE_H_
 
-#include "kriabal/kriabal.h"
+#include <memory>
+#include <string>
+#include <vector>
 
-#include "python.h"
+#include "kriabal/kriabal.h"
+#include "kriabal/streams.h"
 
 namespace renpy
 {
@@ -16,6 +19,7 @@ namespace renpy
         void PrepareItems() override;
     private:
         static void UncompressZlibStream(const std::string& input_buffer, std::string& output_buffer);
+        static void UnpickleBytes(kriabal::stream::MemoryStream& stream, std::vector<std::unique_ptr<ArchiveItem>>& items);
         void ParsePythonIndex(const std::string& input_buffer, int64_t encryption_key);
     };
 }

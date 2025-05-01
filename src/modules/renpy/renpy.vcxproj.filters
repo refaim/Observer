@@ -24,18 +24,12 @@
     <ClCompile Include="renpy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="python.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="archive.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="python.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="archive.h">
